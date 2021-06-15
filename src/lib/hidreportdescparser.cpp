@@ -16,6 +16,7 @@ e-mail   :  support@circuitsathome.com
  */
 
 #include "hidreportdescparser.h"
+#include "hidusgtyp.h"
 
 const char * const HIDReportDescParser::usagePageTitles0[] PROGMEM = {
         pstrUsagePageGenericDesktopControls,
@@ -990,12 +991,426 @@ const char * const HIDReportDescParser::medInstrTitles4[] PROGMEM = {
         pstrUsageSoftControlAdjust
 };
 
+const uint8_t HIDReportDescParser::consTypes0[] PROGMEM = {
+        usgtypUsageConsumerControl,
+        usgtypUsageNumericKeyPad,
+        usgtypUsageProgrammableButton,
+        usgtypUsageMicrophone,
+        usgtypUsageHeadphone,
+        usgtypUsageGraphicEqualizer
+};
+const uint8_t HIDReportDescParser::consTypes1[] PROGMEM = {
+        usgtypUsagePlus10,
+        usgtypUsagePlus100,
+        usgtypUsageAMPM
+};
+const uint8_t HIDReportDescParser::consTypes2[] PROGMEM = {
+        usgtypUsagePower,
+        usgtypUsageReset,
+        usgtypUsageSleep,
+        usgtypUsageSleepAfter,
+        usgtypUsageSleepMode,
+        usgtypUsageIllumination,
+        usgtypUsageFunctionButtons
+
+};
+const uint8_t HIDReportDescParser::consTypes3[] PROGMEM = {
+        usgtypUsageMenu,
+        usgtypUsageMenuPick,
+        usgtypUsageMenuUp,
+        usgtypUsageMenuDown,
+        usgtypUsageMenuLeft,
+        usgtypUsageMenuRight,
+        usgtypUsageMenuEscape,
+        usgtypUsageMenuValueIncrease,
+        usgtypUsageMenuValueDecrease
+};
+const uint8_t HIDReportDescParser::consTypes4[] PROGMEM = {
+        usgtypUsageDataOnScreen,
+        usgtypUsageClosedCaption,
+        usgtypUsageClosedCaptionSelect,
+        usgtypUsageVCRTV,
+        usgtypUsageBroadcastMode,
+        usgtypUsageSnapshot,
+        usgtypUsageStill
+};
+const uint8_t HIDReportDescParser::consTypes5[] PROGMEM = {
+        usgtypUsageSelection,
+        usgtypUsageAssignSelection,
+        usgtypUsageModeStep,
+        usgtypUsageRecallLast,
+        usgtypUsageEnterChannel,
+        usgtypUsageOrderMovie,
+        usgtypUsageChannel,
+        usgtypUsageMediaSelection,
+        usgtypUsageMediaSelectComputer,
+        usgtypUsageMediaSelectTV,
+        usgtypUsageMediaSelectWWW,
+        usgtypUsageMediaSelectDVD,
+        usgtypUsageMediaSelectTelephone,
+        usgtypUsageMediaSelectProgramGuide,
+        usgtypUsageMediaSelectVideoPhone,
+        usgtypUsageMediaSelectGames,
+        usgtypUsageMediaSelectMessages,
+        usgtypUsageMediaSelectCD,
+        usgtypUsageMediaSelectVCR,
+        usgtypUsageMediaSelectTuner,
+        usgtypUsageQuit,
+        usgtypUsageHelp,
+        usgtypUsageMediaSelectTape,
+        usgtypUsageMediaSelectCable,
+        usgtypUsageMediaSelectSatellite,
+        usgtypUsageMediaSelectSecurity,
+        usgtypUsageMediaSelectHome,
+        usgtypUsageMediaSelectCall,
+        usgtypUsageChannelIncrement,
+        usgtypUsageChannelDecrement,
+        usgtypUsageMediaSelectSAP,
+        usgtypUsagePageReserved,
+        usgtypUsageVCRPlus,
+        usgtypUsageOnce,
+        usgtypUsageDaily,
+        usgtypUsageWeekly,
+        usgtypUsageMonthly
+};
+const uint8_t HIDReportDescParser::consTypes6[] PROGMEM = {
+        usgtypUsagePlay,
+        usgtypUsagePause,
+        usgtypUsageRecord,
+        usgtypUsageFastForward,
+        usgtypUsageRewind,
+        usgtypUsageScanNextTrack,
+        usgtypUsageScanPreviousTrack,
+        usgtypUsageStop,
+        usgtypUsageEject,
+        usgtypUsageRandomPlay,
+        usgtypUsageSelectDisk,
+        usgtypUsageEnterDisk,
+        usgtypUsageRepeat,
+        usgtypUsageTracking,
+        usgtypUsageTrackNormal,
+        usgtypUsageSlowTracking,
+        usgtypUsageFrameForward,
+        usgtypUsageFrameBackwards,
+        usgtypUsageMark,
+        usgtypUsageClearMark,
+        usgtypUsageRepeatFromMark,
+        usgtypUsageReturnToMark,
+        usgtypUsageSearchMarkForward,
+        usgtypUsageSearchMarkBackwards,
+        usgtypUsageCounterReset,
+        usgtypUsageShowCounter,
+        usgtypUsageTrackingIncrement,
+        usgtypUsageTrackingDecrement,
+        usgtypUsageStopEject,
+        usgtypUsagePlayPause,
+        usgtypUsagePlaySkip
+};
+const uint8_t HIDReportDescParser::consTypes7[] PROGMEM = {
+        usgtypUsageVolume,
+        usgtypUsageBalance,
+        usgtypUsageMute,
+        usgtypUsageBass,
+        usgtypUsageTreble,
+        usgtypUsageBassBoost,
+        usgtypUsageSurroundMode,
+        usgtypUsageLoudness,
+        usgtypUsageMPX,
+        usgtypUsageVolumeIncrement,
+        usgtypUsageVolumeDecrement
+};
+const uint8_t HIDReportDescParser::consTypes8[] PROGMEM = {
+        usgtypUsageSpeedSelect,
+        usgtypUsagePlaybackSpeed,
+        usgtypUsageStandardPlay,
+        usgtypUsageLongPlay,
+        usgtypUsageExtendedPlay,
+        usgtypUsageSlow
+};
+const uint8_t HIDReportDescParser::consTypes9[] PROGMEM = {
+        usgtypUsageFanEnable,
+        usgtypUsageFanSpeed,
+        usgtypUsageLightEnable,
+        usgtypUsageLightIlluminationLevel,
+        usgtypUsageClimateControlEnable,
+        usgtypUsageRoomTemperature,
+        usgtypUsageSecurityEnable,
+        usgtypUsageFireAlarm,
+        usgtypUsagePoliceAlarm,
+        usgtypUsageProximity,
+        usgtypUsageMotion,
+        usgtypUsageDuresAlarm,
+        usgtypUsageHoldupAlarm,
+        usgtypUsageMedicalAlarm
+};
+const uint8_t HIDReportDescParser::consTypesA[] PROGMEM = {
+        usgtypUsageBalanceRight,
+        usgtypUsageBalanceLeft,
+        usgtypUsageBassIncrement,
+        usgtypUsageBassDecrement,
+        usgtypUsageTrebleIncrement,
+        usgtypUsageTrebleDecrement
+};
+const uint8_t HIDReportDescParser::consTypesB[] PROGMEM = {
+        usgtypUsageSpeakerSystem,
+        usgtypUsageChannelLeft,
+        usgtypUsageChannelRight,
+        usgtypUsageChannelCenter,
+        usgtypUsageChannelFront,
+        usgtypUsageChannelCenterFront,
+        usgtypUsageChannelSide,
+        usgtypUsageChannelSurround,
+        usgtypUsageChannelLowFreqEnhancement,
+        usgtypUsageChannelTop,
+        usgtypUsageChannelUnknown
+};
+const uint8_t HIDReportDescParser::consTypesC[] PROGMEM = {
+        usgtypUsageSubChannel,
+        usgtypUsageSubChannelIncrement,
+        usgtypUsageSubChannelDecrement,
+        usgtypUsageAlternateAudioIncrement,
+        usgtypUsageAlternateAudioDecrement
+};
+const uint8_t HIDReportDescParser::consTypesD[] PROGMEM = {
+        usgtypUsageApplicationLaunchButtons,
+        usgtypUsageALLaunchButtonConfigTool,
+        usgtypUsageALProgrammableButton,
+        usgtypUsageALConsumerControlConfig,
+        usgtypUsageALWordProcessor,
+        usgtypUsageALTextEditor,
+        usgtypUsageALSpreadsheet,
+        usgtypUsageALGraphicsEditor,
+        usgtypUsageALPresentationApp,
+        usgtypUsageALDatabaseApp,
+        usgtypUsageALEmailReader,
+        usgtypUsageALNewsreader,
+        usgtypUsageALVoicemail,
+        usgtypUsageALContactsAddressBook,
+        usgtypUsageALCalendarSchedule,
+        usgtypUsageALTaskProjectManager,
+        usgtypUsageALLogJournalTimecard,
+        usgtypUsageALCheckbookFinance,
+        usgtypUsageALCalculator,
+        usgtypUsageALAVCapturePlayback,
+        usgtypUsageALLocalMachineBrowser,
+        usgtypUsageALLANWANBrow,
+        usgtypUsageALInternetBrowser,
+        usgtypUsageALRemoteNetISPConnect,
+        usgtypUsageALNetworkConference,
+        usgtypUsageALNetworkChat,
+        usgtypUsageALTelephonyDialer,
+        usgtypUsageALLogon,
+        usgtypUsageALLogoff,
+        usgtypUsageALLogonLogoff,
+        usgtypUsageALTermLockScrSav,
+        usgtypUsageALControlPannel,
+        usgtypUsageALCommandLineProcessorRun,
+        usgtypUsageALProcessTaskManager,
+        usgtypUsageALSelectTaskApplication,
+        usgtypUsageALNextTaskApplication,
+        usgtypUsageALPreviousTaskApplication,
+        usgtypUsageALPreemptiveHaltTaskApp,
+        usgtypUsageALIntegratedHelpCenter,
+        usgtypUsageALDocuments,
+        usgtypUsageALThesaurus,
+        usgtypUsageALDictionary,
+        usgtypUsageALDesktop,
+        usgtypUsageALSpellCheck,
+        usgtypUsageALGrammarCheck,
+        usgtypUsageALWirelessStatus,
+        usgtypUsageALKeyboardLayout,
+        usgtypUsageALVirusProtection,
+        usgtypUsageALEncryption,
+        usgtypUsageALScreenSaver,
+        usgtypUsageALAlarms,
+        usgtypUsageALClock,
+        usgtypUsageALFileBrowser,
+        usgtypUsageALPowerStatus,
+        usgtypUsageALImageBrowser,
+        usgtypUsageALAudioBrowser,
+        usgtypUsageALMovieBrowser,
+        usgtypUsageALDigitalRightsManager,
+        usgtypUsageALDigitalWallet,
+        usgtypUsagePageReserved,
+        usgtypUsageALInstantMessaging,
+        usgtypUsageALOEMFeaturesBrowser,
+        usgtypUsageALOEMHelp,
+        usgtypUsageALOnlineCommunity,
+        usgtypUsageALEntertainmentContentBrow,
+        usgtypUsageALOnlineShoppingBrowser,
+        usgtypUsageALSmartCardInfoHelp,
+        usgtypUsageALMarketMonitorFinBrowser,
+        usgtypUsageALCustomCorpNewsBrowser,
+        usgtypUsageALOnlineActivityBrowser,
+        usgtypUsageALResearchSearchBrowser,
+        usgtypUsageALAudioPlayer
+};
+const uint8_t HIDReportDescParser::consTypesE[] PROGMEM = {
+        usgtypUsageGenericGUIAppControls,
+        usgtypUsageACNew,
+        usgtypUsageACOpen,
+        usgtypUsageACClose,
+        usgtypUsageACExit,
+        usgtypUsageACMaximize,
+        usgtypUsageACMinimize,
+        usgtypUsageACSave,
+        usgtypUsageACPrint,
+        usgtypUsageACProperties,
+        usgtypUsageACUndo,
+        usgtypUsageACCopy,
+        usgtypUsageACCut,
+        usgtypUsageACPaste,
+        usgtypUsageACSelectAll,
+        usgtypUsageACFind,
+        usgtypUsageACFindAndReplace,
+        usgtypUsageACSearch,
+        usgtypUsageACGoto,
+        usgtypUsageACHome,
+        usgtypUsageACBack,
+        usgtypUsageACForward,
+        usgtypUsageACStop,
+        usgtypUsageACRefresh,
+        usgtypUsageACPreviousLink,
+        usgtypUsageACNextLink,
+        usgtypUsageACBookmarks,
+        usgtypUsageACHistory,
+        usgtypUsageACSubscriptions,
+        usgtypUsageACZoomIn,
+        usgtypUsageACZoomOut,
+        usgtypUsageACZoom,
+        usgtypUsageACFullScreenView,
+        usgtypUsageACNormalView,
+        usgtypUsageACViewToggle,
+        usgtypUsageACScrollUp,
+        usgtypUsageACScrollDown,
+        usgtypUsageACScroll,
+        usgtypUsageACPanLeft,
+        usgtypUsageACPanRight,
+        usgtypUsageACPan,
+        usgtypUsageACNewWindow,
+        usgtypUsageACTileHoriz,
+        usgtypUsageACTileVert,
+        usgtypUsageACFormat,
+        usgtypUsageACEdit,
+        usgtypUsageACBold,
+        usgtypUsageACItalics,
+        usgtypUsageACUnderline,
+        usgtypUsageACStrikethrough,
+        usgtypUsageACSubscript,
+        usgtypUsageACSuperscript,
+        usgtypUsageACAllCaps,
+        usgtypUsageACRotate,
+        usgtypUsageACResize,
+        usgtypUsageACFlipHorizontal,
+        usgtypUsageACFlipVertical,
+        usgtypUsageACMirrorHorizontal,
+        usgtypUsageACMirrorVertical,
+        usgtypUsageACFontSelect,
+        usgtypUsageACFontColor,
+        usgtypUsageACFontSize,
+        usgtypUsageACJustifyLeft,
+        usgtypUsageACJustifyCenterH,
+        usgtypUsageACJustifyRight,
+        usgtypUsageACJustifyBlockH,
+        usgtypUsageACJustifyTop,
+        usgtypUsageACJustifyCenterV,
+        usgtypUsageACJustifyBottom,
+        usgtypUsageACJustifyBlockV,
+        usgtypUsageACIndentDecrease,
+        usgtypUsageACIndentIncrease,
+        usgtypUsageACNumberedList,
+        usgtypUsageACRestartNumbering,
+        usgtypUsageACBulletedList,
+        usgtypUsageACPromote,
+        usgtypUsageACDemote,
+        usgtypUsageACYes,
+        usgtypUsageACNo,
+        usgtypUsageACCancel,
+        usgtypUsageACCatalog,
+        usgtypUsageACBuyChkout,
+        usgtypUsageACAddToCart,
+        usgtypUsageACExpand,
+        usgtypUsageACExpandAll,
+        usgtypUsageACCollapse,
+        usgtypUsageACCollapseAll,
+        usgtypUsageACPrintPreview,
+        usgtypUsageACPasteSpecial,
+        usgtypUsageACInsertMode,
+        usgtypUsageACDelete,
+        usgtypUsageACLock,
+        usgtypUsageACUnlock,
+        usgtypUsageACProtect,
+        usgtypUsageACUnprotect,
+        usgtypUsageACAttachComment,
+        usgtypUsageACDeleteComment,
+        usgtypUsageACViewComment,
+        usgtypUsageACSelectWord,
+        usgtypUsageACSelectSentence,
+        usgtypUsageACSelectParagraph,
+        usgtypUsageACSelectColumn,
+        usgtypUsageACSelectRow,
+        usgtypUsageACSelectTable,
+        usgtypUsageACSelectObject,
+        usgtypUsageACRedoRepeat,
+        usgtypUsageACSort,
+        usgtypUsageACSortAscending,
+        usgtypUsageACSortDescending,
+        usgtypUsageACFilter,
+        usgtypUsageACSetClock,
+        usgtypUsageACViewClock,
+        usgtypUsageACSelectTimeZone,
+        usgtypUsageACEditTimeZone,
+        usgtypUsageACSetAlarm,
+        usgtypUsageACClearAlarm,
+        usgtypUsageACSnoozeAlarm,
+        usgtypUsageACResetAlarm,
+        usgtypUsageACSyncronize,
+        usgtypUsageACSendReceive,
+        usgtypUsageACSendTo,
+        usgtypUsageACReply,
+        usgtypUsageACReplyAll,
+        usgtypUsageACForwardMessage,
+        usgtypUsageACSend,
+        usgtypUsageACAttachFile,
+        usgtypUsageACUpload,
+        usgtypUsageACDownload,
+        usgtypUsageACSetBorders,
+        usgtypUsageACInsertRow,
+        usgtypUsageACInsertColumn,
+        usgtypUsageACInsertFile,
+        usgtypUsageACInsertPicture,
+        usgtypUsageACInsertObject,
+        usgtypUsageACInsertSymbol,
+        usgtypUsageACSaveAndClose,
+        usgtypUsageACRename,
+        usgtypUsageACMerge,
+        usgtypUsageACSplit,
+        usgtypUsageACDistributeHorizontaly,
+        usgtypUsageACDistributeVerticaly
+};
+
 void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const uint16_t &offset __attribute__((unused))) {
         uint16_t cntdn = (uint16_t)len;
         uint8_t *p = (uint8_t*)pbuf;
 
+        uint16_t strcntdn = len;        //*Count down to store all item of the buffer, based on buffer len(gth)
+        uint8_t *pstrbuf = (uint8_t*)pbuf;      //*
+
+        static uint16_t addcnt = 0;     //*
+        static uint8_t ifacecntdn = 0;  //*
 
         totalSize = 0;
+
+        
+        //*Store the buffers of HID Report Descriptor
+        if (bNumIface > ifacecntdn) {
+                fNewIface = false;
+                for (; strcntdn; strcntdn--, addcnt++, pstrbuf++) {
+                        ppRptDescBufs[ifacecntdn][addcnt] = *pstrbuf;
+                }
+        } else {
+                E_Notify(PSTR("\r\nERROR: too much iface"),0x80);
+        }
 
         while(cntdn) {
                 //USB_HOST_SERIAL.println("");
@@ -1004,9 +1419,14 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
 
                 ParseItem(&p, &cntdn);
 
-                //if (ParseItem(&p, &cntdn))
-                //        return;
         }
+
+        if (len < 64){  //*The maximum buffer length that can be retrieved is 64
+                addcnt = 0;
+                ifacecntdn++;
+                fNewIface = true;
+        }
+
         //USBTRACE2("Total:", totalSize);
 }
 
@@ -1091,6 +1511,14 @@ void HIDReportDescParser::PrintItemTitle(uint8_t prefix) {
 uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
         //uint8_t ret = enErrorSuccess;
         //reinterpret_cast<>(varBuffer);
+
+        static bool frptsiz = false; //*flag to check if report size is obtained
+        static bool frptcnt = false; //*flag to check if report count is obtained
+
+        static bool finclctn = false;   //*flag in Collection or not
+
+        static uint16_t bitcnt = 0; //*HID Repor bit count to identfy the bit that Consumer Control items are described;
+
         switch(itemParseState) {
                 case 0:
                         if(**pp == HID_LONG_ITEM_PREFIX)
@@ -1099,6 +1527,8 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                 uint8_t size = ((**pp) & DATA_SIZE_MASK);
                                 itemPrefix = (**pp);
                                 itemSize = 1 + ((size == DATA_SIZE_4) ? 4 : size);
+
+                                PrintItemTitle(itemPrefix);
                         }
                         (*pp)++;
                         (*pcntdn)--;
@@ -1137,21 +1567,72 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         break;
                                 case (TYPE_GLOBAL | TAG_GLOBAL_REPORTSIZE):
                                         rptSize = data;
+                                        PrintByteValue(data);
                                         break;
                                 case (TYPE_GLOBAL | TAG_GLOBAL_REPORTCOUNT):
                                         rptCount = data;
+                                        PrintByteValue(data);
                                         break;
+                                case (TYPE_GLOBAL | TAG_GLOBAL_LOGICALMIN):
+                                case (TYPE_GLOBAL | TAG_GLOBAL_LOGICALMAX):
+                                case (TYPE_GLOBAL | TAG_GLOBAL_PHYSMIN):
+                                case (TYPE_GLOBAL | TAG_GLOBAL_PHYSMAX):
+                                        PrintValue(varBuffer, theBuffer.valueSize);
+                                        break;  
                                 case (TYPE_GLOBAL | TAG_GLOBAL_REPORTID):
                                         rptId = data;
+                                        PrintValue(varBuffer, theBuffer.valueSize);
                                         break;
                                 case (TYPE_LOCAL | TAG_LOCAL_USAGEMIN):
                                         useMin = data;
+                                        PrintValue(varBuffer, theBuffer.valueSize);
                                         break;
                                 case (TYPE_LOCAL | TAG_LOCAL_USAGEMAX):
                                         useMax = data;
+                                        PrintValue(varBuffer, theBuffer.valueSize);
+                                        break;
+                                case (TYPE_GLOBAL | TAG_GLOBAL_UNITEXP):
+                                case (TYPE_GLOBAL | TAG_GLOBAL_UNIT):
+                                        PrintValue(varBuffer, theBuffer.valueSize);
+                                        break;
+                                case (TYPE_GLOBAL | TAG_GLOBAL_PUSH):
+                                case (TYPE_GLOBAL | TAG_GLOBAL_POP):
                                         break;
                                 case (TYPE_GLOBAL | TAG_GLOBAL_USAGEPAGE):
                                         SetUsagePage(data);
+                                        PrintUsagePage(data);
+                                        PrintByteValue(data);
+                                        break;
+                                case (TYPE_MAIN | TAG_MAIN_COLLECTION):
+
+                                case (TYPE_MAIN | TAG_MAIN_ENDCOLLECTION):
+                                        switch(data) {
+                                                case 0x00:
+                                                        E_Notify(PSTR(" Physical"), 0x80);
+                                                        break;
+                                                case 0x01:
+                                                        E_Notify(PSTR(" Application"), 0x80);
+                                                        break;
+                                                case 0x02:
+                                                        E_Notify(PSTR(" Logical"), 0x80);
+                                                        break;
+                                                case 0x03:
+                                                        E_Notify(PSTR(" Report"), 0x80);
+                                                        break;
+                                                case 0x04:
+                                                        E_Notify(PSTR(" Named Array"), 0x80);
+                                                        break;
+                                                case 0x05:
+                                                        E_Notify(PSTR(" Usage Switch"), 0x80);
+                                                        break;
+                                                case 0x06:
+                                                        E_Notify(PSTR(" Usage Modifier"), 0x80);
+                                                        break;
+                                                default:
+                                                        E_Notify(PSTR(" Vendor Defined("), 0x80);
+                                                        PrintHex<uint8_t > (data, 0x80);
+                                                        E_Notify(PSTR(")"), 0x80);
+                                        }
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_OUTPUT):
                                 case (TYPE_MAIN | TAG_MAIN_FEATURE):
@@ -1159,19 +1640,27 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         rptCount = 0;
                                         useMin = 0;
                                         useMax = 0;
+                                        E_Notify(PSTR("("), 0x80);
+                                        PrintBin<uint8_t > (data, 0x80);
+                                        E_Notify(PSTR(")"), 0x80);
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_INPUT):
-                                        OnInputItem(data);
+                                        // OnInputItem(data);
 
                                         totalSize += (uint16_t)rptSize * (uint16_t)rptCount;
+                                        bitcnt = totalSize;
 
                                         rptSize = 0;
                                         rptCount = 0;
                                         useMin = 0;
                                         useMax = 0;
+                                        E_Notify(PSTR("("), 0x80);
+                                        PrintBin<uint8_t > (data, 0x80);
+                                        E_Notify(PSTR(")"), 0x80);
                                         break;
                         } // switch (**pp & (TYPE_MASK | TAG_MASK))
                 }
+
         } // switch (itemParseState)
         itemParseState = 0;
         return enErrorSuccess;
@@ -1393,70 +1882,74 @@ void HIDReportDescParser::PrintMedicalInstrumentPageUsage(uint16_t usage) {
 }
 
 
-void HIDReportDescParser::OnInputItem(uint8_t itm) {
-        uint8_t byte_offset = (totalSize >> 3); // calculate offset to the next unhandled byte i = (int)(totalCount / 8);
-        uint32_t tmp = (byte_offset << 3);
-        uint8_t bit_offset = totalSize - tmp; // number of bits in the current byte already handled
-        uint8_t *p = pBuf + byte_offset; // current byte pointer
+// void HIDReportDescParser::OnInputItem(uint8_t itm) {
+//         uint8_t byte_offset = (totalSize >> 3); // calculate offset to the next unhandled byte i = (int)(totalCount / 8);
+//         uint32_t tmp = (byte_offset << 3);
+//         uint8_t bit_offset = totalSize - tmp; // number of bits in the current byte already handled
+//         uint8_t *p = pBuf + byte_offset; // current byte pointer
 
-        if(bit_offset)
-                *p >>= bit_offset;
+//         if(bit_offset)
+//                 *p >>= bit_offset;
 
-        uint8_t usage = useMin;
+//         uint8_t usage = useMin;
 
-        bool print_usemin_usemax = ((useMin < useMax) && ((itm & 3) == 2) && pfUsage) ? true : false;
+//         bool print_usemin_usemax = ((useMin < useMax) && ((itm & 3) == 2) && pfUsage) ? true : false;
 
-        uint8_t bits_of_byte = 8;
+//         uint8_t bits_of_byte = 8;
 
-        // for each field in field array defined by rptCount
-        for(uint8_t field = 0; field < rptCount; field++, usage++) {
+//         // for each field in field array defined by rptCount
+//         for(uint8_t field = 0; field < rptCount; field++, usage++) {
 
-                union {
-                        uint8_t bResult[4];
-                        uint16_t wResult[2];
-                        uint32_t dwResult;
-                } result;
+//                 union {
+//                         uint8_t bResult[4];
+//                         uint16_t wResult[2];
+//                         uint32_t dwResult;
+//                 } result;
 
-                result.dwResult = 0;
-                uint8_t mask = 0;
+//                 result.dwResult = 0;
+//                 uint8_t mask = 0;
 
-                if(print_usemin_usemax)
-                        pfUsage(usage);
+//                 if(print_usemin_usemax)
+//                         pfUsage(usage);
 
-                // bits_left            - number of bits in the field(array of fields, depending on Report Count) left to process
-                // bits_of_byte         - number of bits in current byte left to process
-                // bits_to_copy         - number of bits to copy to result buffer
+//                 // bits_left            - number of bits in the field(array of fields, depending on Report Count) left to process
+//                 // bits_of_byte         - number of bits in current byte left to process
+//                 // bits_to_copy         - number of bits to copy to result buffer
 
-                // for each bit in a field
-                for(uint8_t bits_left = rptSize, bits_to_copy = 0; bits_left;
-                        bits_left -= bits_to_copy) {
-                        bits_to_copy = (bits_left > bits_of_byte) ? bits_of_byte : bits_left;
+//                 // for each bit in a field
+//                 for(uint8_t bits_left = rptSize, bits_to_copy = 0; bits_left;
+//                         bits_left -= bits_to_copy) {
+//                         bits_to_copy = (bits_left > bits_of_byte) ? bits_of_byte : bits_left;
 
-                        result.dwResult <<= bits_to_copy; // Result buffer is shifted by the number of bits to be copied into it
+//                         result.dwResult <<= bits_to_copy; // Result buffer is shifted by the number of bits to be copied into it
 
-                        uint8_t val = *p;
+//                         uint8_t val = *p;
 
-                        val >>= (8 - bits_of_byte); // Shift by the number of bits already processed
+//                         val >>= (8 - bits_of_byte); // Shift by the number of bits already processed
 
-                        mask = 0;
+//                         mask = 0;
 
-                        for(uint8_t j = bits_to_copy; j; j--) {
-                                mask <<= 1;
-                                mask |= 1;
-                        }
+//                         for(uint8_t j = bits_to_copy; j; j--) {
+//                                 mask <<= 1;
+//                                 mask |= 1;
+//                         }
 
-                        result.bResult[0] = (result.bResult[0] | (val & mask));
+//                         result.bResult[0] = (result.bResult[0] | (val & mask));
 
-                        bits_of_byte -= bits_to_copy;
+//                         bits_of_byte -= bits_to_copy;
 
-                        if(bits_of_byte < 1) {
-                                bits_of_byte = 8;
-                                p++;
-                        }
-                }
-                PrintByteValue(result.dwResult);
-        }
-        E_Notify(PSTR("\r\n"), 0x80);
-}
+//                         if(bits_of_byte < 1) {
+//                                 bits_of_byte = 8;
+//                                 p++;
+//                         }
+//                 }
+//                 PrintByteValue(result.dwResult);
+//         }
+//         E_Notify(PSTR("\r\n"), 0x80);
+// }
 
+// void HIDReportDescParser::StoreRptDescBuf(const uint8_t iface,const uint8_t *pBuf){
+
+//         pRptDescBuf[iface][]
+// }
 

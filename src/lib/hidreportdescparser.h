@@ -2,7 +2,20 @@
 #if !defined(__HIDRPTDESCPSR_H__)
 #define __HIDRPTDESCPSR_H__
 
-#include "usbhid.h"
+#include <usbhid.h>
+
+#define REPORT_DESC_MEM_NUM 8   //Number of Report Descriptor memory 
+
+struct ConsumerCtrlBitManager{
+        uint16_t plynpus;        //play and pause
+        uint16_t stop;           //stop
+        uint16_t scnptrk;        //scan previous track
+        uint16_t scnntrk;        //scan next track
+        uint16_t mute;           //mute
+        uint16_t voldec;         //Volume Decrement
+        uint16_t volinc;         //Volume Increment
+};
+
 
 class HIDReportDescParser : public USBReadParser {
 public:
@@ -80,6 +93,22 @@ public:
         static const char * const medInstrTitles3[];
         static const char * const medInstrTitles4[];
 
+        
+        static const uint8_t consTypes0[];      //*
+        static const uint8_t consTypes1[];      //*
+        static const uint8_t consTypes2[];      //*
+        static const uint8_t consTypes3[];      //*
+        static const uint8_t consTypes4[];      //*
+        static const uint8_t consTypes5[];      //*
+        static const uint8_t consTypes6[];      //*
+        static const uint8_t consTypes7[];      //*
+        static const uint8_t consTypes8[];      //*
+        static const uint8_t consTypes9[];      //*
+        static const uint8_t consTypesA[];      //*
+        static const uint8_t consTypesB[];      //*
+        static const uint8_t consTypesC[];      //*
+        static const uint8_t consTypesD[];      //*
+        static const uint8_t consTypesE[];      //*
 
 
 protected:
@@ -107,17 +136,25 @@ protected:
         void SetUsagePage(uint16_t page);
 
 
-        uint8_t rptId; // Report ID
-        uint8_t useMin; // Usage Minimum
-        uint8_t useMax; // Usage Maximum
-        uint8_t fieldCount; // Number of field being currently processed
+        uint8_t rptId; //* Report ID
+        uint8_t useMin; //* Usage Minimum
+        uint8_t useMax; //* Usage Maximum
+        uint8_t fieldCount; //* Number of field being currently processed
 
-        void OnInputItem(uint8_t itm); // Method which is called every time Input item is found
+        void OnInputItem(uint8_t itm); //* Method which is called every time Input item is found
 
-        uint8_t *pBuf; // Report buffer pointer
-        uint8_t bLen; // Report length
+        uint8_t bNumIface;      //*
+        uint16_t maxRptDescLen; //*
+        bool fNewIface = true;
+
+
+        ConsumerCtrlBitManager csmCtrkBitMgr;   //*
 
 public:
+
+        uint8_t **ppRptDescBufs; //2D-array to store the Report Descriptor Buffers
+        // uint8_t *rptDescType;  //Array to store the Report Descriptor type
+        uint8_t *pLatestBuf;
 
         HIDReportDescParser() :
         itemParseState(0),
@@ -130,14 +167,15 @@ public:
         useMin(0),
         useMax(0),
         fieldCount(0),
-        pBuf(NULL),
-        bLen(0) {
+        bNumIface(1),
+        maxRptDescLen(0)
+        {
                 theBuffer.pValue = varBuffer;
                 valParser.Initialize(&theBuffer);
                 theSkipper.Initialize(&theBuffer);
         };
         
-        HIDReportDescParser(uint16_t len, uint8_t *pbuf) :
+        HIDReportDescParser(uint8_t numiface, uint16_t maxlen) :
         itemParseState(0),
         itemSize(0),
         itemPrefix(0),
@@ -148,11 +186,22 @@ public:
         useMin(0),
         useMax(0),
         fieldCount(0),
-        pBuf(pbuf),
-        bLen(len) {
+        bNumIface(numiface),
+        maxRptDescLen(maxlen)
+        {
                 theBuffer.pValue = varBuffer;
                 valParser.Initialize(&theBuffer);
                 theSkipper.Initialize(&theBuffer);
+
+                if (bNumIface && maxRptDescLen){
+                        //Dynamically allocate pRptDescBufs, based on bNumIface and maxRptDescLen 
+                        ppRptDescBufs = new uint8_t*[bNumIface];
+                        for (int i = 0; i < bNumIface; i++){
+                                ppRptDescBufs[i] = new uint8_t[maxRptDescLen];
+                        }
+                } else {
+                        ppRptDescBufs = 0;
+                }
         };
 
         void Parse(const uint16_t len, const uint8_t *pbuf, const uint16_t &offset);
@@ -162,6 +211,9 @@ public:
                 , enErrorIncomplete // value or record is partialy read in buffer
                 , enErrorBufferTooSmall
         };
+
+
+        void StoreRptDescBuf(const uint8_t iface, const uint8_t *pBuf);
 };
 
 #endif // __HIDRPTDESCPSR_H__
