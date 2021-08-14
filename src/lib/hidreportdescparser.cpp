@@ -1399,9 +1399,20 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
         static uint16_t addcnt = 0;     //*
         static uint8_t ifacecntdn = 0;  //*
 
-        totalSize = 0;
+        //*Initialize if parsing new interface HID report descriptor is required
+        if (fNewIface) {
+                for (int i = 0; i < 4; i++) {
+                        oBufLen[i] = 0;
+                        iBufLen[i] = 0;
+                        for (int j = 0; j < 512; j++) {
+                                oBufUsgPage[i][j] = 0;
+                                oBufUsg[i][j] = 0;
+                                iBufUsgPage[i][j] = 0;
+                                iBufUsg[i][j] = 0;
+                        }
+                }
+        }
 
-        
         //*Store the buffers of HID Report Descriptor
         if (bNumIface > ifacecntdn) {
                 fNewIface = false;
@@ -1423,6 +1434,7 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
 
         if (len < 64){  //*The maximum buffer length that can be retrieved is 64
                 addcnt = 0;
+                totalSize = 0;
                 ifacecntdn++;
                 fNewIface = true;
         }
@@ -1431,15 +1443,16 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
 }
 
 void HIDReportDescParser::PrintValue(uint8_t *p, uint8_t len) {
+        p = p + len - 1;
         E_Notify(PSTR("("), 0x80);
-        for(; len; p++, len--)
+        for(; len; p--, len--)
                 PrintHex<uint8_t > (*p, 0x80);
         E_Notify(PSTR(")"), 0x80);
 }
 
-void HIDReportDescParser::PrintByteValue(uint8_t data) {
+void HIDReportDescParser::PrintByteValue(uint16_t data) {
         E_Notify(PSTR("("), 0x80);
-        PrintHex<uint8_t > (data, 0x80);
+        PrintHex<uint16_t > (data, 0x80);
         E_Notify(PSTR(")"), 0x80);
 }
 
@@ -1512,12 +1525,11 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
         //uint8_t ret = enErrorSuccess;
         //reinterpret_cast<>(varBuffer);
 
-        static bool frptsiz = false; //*flag to check if report size is obtained
-        static bool frptcnt = false; //*flag to check if report count is obtained
+        static uint16_t usagepage = 0;   //*to check current usage page
+        static uint8_t usgtyp = 0;      //*
+        uint16_t usg;   //*
 
-        static bool finclctn = false;   //*flag in Collection or not
-
-        static uint16_t bitcnt = 0; //*HID Repor bit count to identfy the bit that Consumer Control items are described;
+        // static uint16_t tmpBitCnt = 0; //*HID Repor bit count to identfy the bit that Consumer Control items are described;
 
         switch(itemParseState) {
                 case 0:
@@ -1529,49 +1541,62 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                 itemSize = 1 + ((size == DATA_SIZE_4) ? 4 : size);
 
                                 PrintItemTitle(itemPrefix);
+                                E_Notify(itemSize,0x80);
                         }
                         (*pp)++;
                         (*pcntdn)--;
                         itemSize--;
                         itemParseState = 1;
 
-                        if(!itemSize)
-                                break;
+                        // if(!itemSize)
+                                // break;
 
                         if(!pcntdn)
                                 return enErrorIncomplete;
                         // fall through
                 case 1:
                         theBuffer.valueSize = itemSize;
-                        valParser.Initialize(&theBuffer);
+                        valParser.Initialize(&theBuffer);       //*comment: itemSize is assigned to valParser.countDown
                         itemParseState = 2;
                         // fall through
                 case 2:
-                        if(!valParser.Parse(pp, pcntdn))
+                        if(!valParser.Parse(pp, pcntdn))        //*comment: descreasing cntdn by itemSize
                                 return enErrorIncomplete;
                         itemParseState = 3;
                         // fall through
                 case 3:
                 {
-                        uint8_t data = *((uint8_t*)varBuffer);
+                        uint16_t data = 0;
+
+                        switch(itemSize) {
+                                case 1:
+                                        data = *((uint16_t*)varBuffer);
+                                        break;
+                                case 2: 
+                                        uint16_t* u16_data = reinterpret_cast<uint16_t *>(varBuffer);
+                                        data = *u16_data;
+                                        break;
+                                default:
+                                        // data = 0;
+                                        break;
+                        }
 
                         switch(itemPrefix & (TYPE_MASK | TAG_MASK)) {
                                 case (TYPE_LOCAL | TAG_LOCAL_USAGE):
                                         if(pfUsage) {
-                                                if(theBuffer.valueSize > 1) {
-                                                        uint16_t* ui16 = reinterpret_cast<uint16_t *>(varBuffer);
-                                                        pfUsage(*ui16);
-                                                } else
-                                                        pfUsage(data);
+                                                pfUsage(data);
+                                                usg = data;
                                         }
+                                        tmpUsgBuf[tmpBitCnt] = usg;
+                                        tmpBitCnt++;
                                         break;
                                 case (TYPE_GLOBAL | TAG_GLOBAL_REPORTSIZE):
-                                        rptSize = data;
-                                        PrintByteValue(data);
+                                        rptSize = (uint8_t)data;
+                                        PrintByteValue(rptSize);
                                         break;
                                 case (TYPE_GLOBAL | TAG_GLOBAL_REPORTCOUNT):
-                                        rptCount = data;
-                                        PrintByteValue(data);
+                                        rptCount = (uint8_t)data;
+                                        PrintByteValue(rptCount);
                                         break;
                                 case (TYPE_GLOBAL | TAG_GLOBAL_LOGICALMIN):
                                 case (TYPE_GLOBAL | TAG_GLOBAL_LOGICALMAX):
@@ -1580,16 +1605,31 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         PrintValue(varBuffer, theBuffer.valueSize);
                                         break;  
                                 case (TYPE_GLOBAL | TAG_GLOBAL_REPORTID):
-                                        rptId = data;
+                                        rptId = (uint8_t)data;
                                         PrintValue(varBuffer, theBuffer.valueSize);
+                                        if(!data) {
+                                                E_Notify(PSTR("Report ID: 0 is invalid!!"), 0x80);
+                                        }
                                         break;
                                 case (TYPE_LOCAL | TAG_LOCAL_USAGEMIN):
-                                        useMin = data;
-                                        PrintValue(varBuffer, theBuffer.valueSize);
+                                        if(pfUsage) {
+                                                useMin = (uint8_t)data;
+                                                PrintValue(varBuffer, theBuffer.valueSize);
+                                                tmpBitCnt = 0;
+                                        }else {
+                                                useMin = 0;
+                                                E_Notify(PSTR("(NAN)"), 0x80);
+                                        }
                                         break;
                                 case (TYPE_LOCAL | TAG_LOCAL_USAGEMAX):
-                                        useMax = data;
-                                        PrintValue(varBuffer, theBuffer.valueSize);
+                                        if(pfUsage) {
+                                                useMax = (uint8_t)data;
+                                                PrintValue(varBuffer, theBuffer.valueSize);
+                                                tmpBitCnt = 0;
+                                        }else {
+                                                useMax = 0;
+                                                E_Notify(PSTR("(NAN)"), 0x80);
+                                        }
                                         break;
                                 case (TYPE_GLOBAL | TAG_GLOBAL_UNITEXP):
                                 case (TYPE_GLOBAL | TAG_GLOBAL_UNIT):
@@ -1602,10 +1642,15 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         SetUsagePage(data);
                                         PrintUsagePage(data);
                                         PrintByteValue(data);
+                                        usagepage = data;
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_COLLECTION):
-
-                                case (TYPE_MAIN | TAG_MAIN_ENDCOLLECTION):
+                                        rptId = 0;
+                                        rptSize = 0;
+                                        rptCount = 0;
+                                        useMin = 0;
+                                        useMax = 0;
+                                        tmpBitCnt = 0;
                                         switch(data) {
                                                 case 0x00:
                                                         E_Notify(PSTR(" Physical"), 0x80);
@@ -1634,29 +1679,40 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                                         E_Notify(PSTR(")"), 0x80);
                                         }
                                         break;
+                                case (TYPE_MAIN | TAG_MAIN_ENDCOLLECTION):
+                                        rptId = 0;
+                                        rptSize = 0;
+                                        rptCount = 0;
+                                        useMin = 0;
+                                        useMax = 0;
+                                        tmpBitCnt = 0;
+                                        break;
                                 case (TYPE_MAIN | TAG_MAIN_OUTPUT):
                                 case (TYPE_MAIN | TAG_MAIN_FEATURE):
+                                        E_Notify(PSTR("("), 0x80);
+                                        PrintBin<uint8_t > (data, 0x80);
+                                        E_Notify(PSTR(")"), 0x80);
+                                        rptId = 0;
                                         rptSize = 0;
                                         rptCount = 0;
                                         useMin = 0;
                                         useMax = 0;
-                                        E_Notify(PSTR("("), 0x80);
-                                        PrintBin<uint8_t > (data, 0x80);
-                                        E_Notify(PSTR(")"), 0x80);
+                                        tmpBitCnt = 0;
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_INPUT):
-                                        // OnInputItem(data);
+                                        OnInputItem(data);
 
                                         totalSize += (uint16_t)rptSize * (uint16_t)rptCount;
-                                        bitcnt = totalSize;
+                                        E_Notify(PSTR("("), 0x80);
+                                        PrintBin<uint8_t > (data, 0x80);
+                                        E_Notify(PSTR(")"), 0x80);
 
+                                        rptId = 0;
+                                        tmpBitCnt = 0;
                                         rptSize = 0;
                                         rptCount = 0;
                                         useMin = 0;
                                         useMax = 0;
-                                        E_Notify(PSTR("("), 0x80);
-                                        PrintBin<uint8_t > (data, 0x80);
-                                        E_Notify(PSTR(")"), 0x80);
                                         break;
                         } // switch (**pp & (TYPE_MASK | TAG_MASK))
                 }
@@ -1684,6 +1740,28 @@ HIDReportDescParser::UsagePageFunc HIDReportDescParser::usagePageFunctions[] /*P
         NULL, // PID
         NULL // Unicode
 };
+
+//*
+HIDReportDescParser::UsgTypFunc HIDReportDescParser::usgTypFuncs[] /*PROGMEM*/ = {
+        NULL, //GenericDesktopPageUsage
+        NULL, // SimulationControls
+        NULL, // VRControls
+        NULL, // SportsControls
+        NULL, // GameControls
+        NULL, // GenericDeviceControls
+        NULL, // Keyboard/Keypad
+        NULL, // LED
+        NULL, // Button
+        NULL, // Ordinal
+        NULL, // Telephony
+        getConsumerPageUsageType, // Consumer
+        NULL, // Digitizer
+        NULL, // Reserved
+        NULL, // PID
+        NULL // Unicode
+};
+
+
 
 void HIDReportDescParser::SetUsagePage(uint16_t page) {
         pfUsage = NULL;
@@ -1881,75 +1959,220 @@ void HIDReportDescParser::PrintMedicalInstrumentPageUsage(uint16_t usage) {
         else E_Notify(pstrUsagePageUndefined, 0x80);
 }
 
+uint8_t HIDReportDescParser::getConsumerPageUsageType(uint16_t usage) {
+        if (VALUE_BETWEEN(usage,0x00,0x07)) {
+                return consTypes0[usage - (0x00 + 1)];
+        } else if (VALUE_BETWEEN(usage,0x1f,0x23)) {
+                return consTypes1[usage - (0x1f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x2f,0x37)) {
+                return consTypes2[usage - (0x2f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x3f,0x49)) {
+                return consTypes3[usage - (0x3f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x5f,0x67)) {
+                return consTypes4[usage - (0x5f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x7f,0xa5)) {
+                return consTypes5[usage - (0x7f + 1)];
+        } else if (VALUE_BETWEEN(usage,0xaf,0xcf)) {
+                return consTypes6[usage - (0xaf + 1)];
+        } else if (VALUE_BETWEEN(usage,0xdf,0xeb)) {
+                return consTypes7[usage - (0xdf + 1)];
+        } else if (VALUE_BETWEEN(usage,0xef,0xf6)) {
+                return consTypes8[usage - (0xef + 1)];
+        } else if (VALUE_BETWEEN(usage,0xff,0x10e)) {
+                return consTypes9[usage - (0xff + 1)];
+        } else if (VALUE_BETWEEN(usage,0x14f,0x156)) {
+                return consTypesA[usage - (0x14f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x15f,0x16b)) {
+                return consTypesB[usage - (0x15f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x16f,0x175)) {
+                return consTypesC[usage - (0x16f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x17f,0x1c8)) {
+                return consTypesD[usage - (0x17f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x1ff,0x29d)) {
+                return consTypesE[usage - (0x1ff + 1)];
+        } else {
+                E_Notify("typ chk: Undef Usage Page",0x80);
+                return 0;
+        }
+}
 
-// void HIDReportDescParser::OnInputItem(uint8_t itm) {
-//         uint8_t byte_offset = (totalSize >> 3); // calculate offset to the next unhandled byte i = (int)(totalCount / 8);
-//         uint32_t tmp = (byte_offset << 3);
-//         uint8_t bit_offset = totalSize - tmp; // number of bits in the current byte already handled
-//         uint8_t *p = pBuf + byte_offset; // current byte pointer
 
-//         if(bit_offset)
-//                 *p >>= bit_offset;
+void HIDReportDescParser::OnInputItem(uint8_t itm) {
+        static uint8_t rptid = 0;
+        uint8_t buf_shift_count = rptSize * rptCount;
 
-//         uint8_t usage = useMin;
+        if(rptid != rptId) {
+                iBufLen[rptid - 1] = 1;
+        }
 
-//         bool print_usemin_usemax = ((useMin < useMax) && ((itm & 3) == 2) && pfUsage) ? true : false;
+        if(rptId) {     //* When Report ID is >=1, the Report Descriptor has multiple Report.
+                rptid = rptId;
+        } else if(!iBufLen[rptid - 1]){        //* When no report id is not declared, the Report ID is set to 0.
+                rptid = 1;
+                iBufLen[rptid - 1] = 1;
+        } else {
+                rptid = 1;
+        }
 
-//         uint8_t bits_of_byte = 8;
+        if(useMin && useMax) {
+                if((useMax - useMin) != rptSize) {
+                        buf_shift_count = 0;    //*Skip Buffer transfer
+                        E_Notify(PSTR("\r\nUnmatch (useMax - useMin) and rptSize!!"), 0x80);
+                }
+                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = 0; j < rptSize; j++) {
+                                iBufUsg[rptid -1][i + j] = useMin + j;
+                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+        } else if(useMin) {
+                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = 0; j < rptSize; j++) {
+                                iBufUsg[rptid -1][i + j] = useMin + j;
+                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+        } else if(useMax) {
+                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = rptSize - 1; j; j--) {
+                                iBufUsg[rptid -1][i + j] = useMax - j;
+                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+        } else {
+                if(tmpBitCnt)
+                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = 0; j < rptSize; j++) {
+                                iBufUsg[rptid -1][i + j] = tmpUsgBuf[j];
+                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+                for(int i = 0; i < rptSize; i++){       //*Reset temporary Usage Buffer
+                        tmpUsgBuf[i] = 0;
+                }
+        }
 
-//         // for each field in field array defined by rptCount
-//         for(uint8_t field = 0; field < rptCount; field++, usage++) {
+        iBufLen[rptid -1] += buf_shift_count;
 
-//                 union {
-//                         uint8_t bResult[4];
-//                         uint16_t wResult[2];
-//                         uint32_t dwResult;
-//                 } result;
+        // uint8_t byte_offset = (totalSize >> 3); // calculate offset to the next unhandled byte i = (int)(totalCount / 8);
+        // uint32_t tmp = (byte_offset << 3);
+        // uint8_t bit_offset = totalSize - tmp; // number of bits in the current byte already handled
+        // uint8_t *p = pBuf + byte_offset; // current byte pointer
 
-//                 result.dwResult = 0;
-//                 uint8_t mask = 0;
+        // if(bit_offset)
+        //         *p >>= bit_offset;
 
-//                 if(print_usemin_usemax)
-//                         pfUsage(usage);
+        // uint8_t usage = useMin;
 
-//                 // bits_left            - number of bits in the field(array of fields, depending on Report Count) left to process
-//                 // bits_of_byte         - number of bits in current byte left to process
-//                 // bits_to_copy         - number of bits to copy to result buffer
+        // bool print_usemin_usemax = ((useMin < useMax) && ((itm & 3) == 2) && pfUsage) ? true : false;
 
-//                 // for each bit in a field
-//                 for(uint8_t bits_left = rptSize, bits_to_copy = 0; bits_left;
-//                         bits_left -= bits_to_copy) {
-//                         bits_to_copy = (bits_left > bits_of_byte) ? bits_of_byte : bits_left;
+        // uint8_t bits_of_byte = 8;
 
-//                         result.dwResult <<= bits_to_copy; // Result buffer is shifted by the number of bits to be copied into it
+        // // for each field in field array defined by rptCount
+        // for(uint8_t field = 0; field < rptCount; field++, usage++) {
 
-//                         uint8_t val = *p;
+        //         union {
+        //                 uint8_t bResult[4];
+        //                 uint16_t wResult[2];
+        //                 uint32_t dwResult;
+        //         } result;
 
-//                         val >>= (8 - bits_of_byte); // Shift by the number of bits already processed
+        //         result.dwResult = 0;
+        //         uint8_t mask = 0;
 
-//                         mask = 0;
+        //         if(print_usemin_usemax)
+        //                 pfUsage(usage);
 
-//                         for(uint8_t j = bits_to_copy; j; j--) {
-//                                 mask <<= 1;
-//                                 mask |= 1;
-//                         }
+        //         // bits_left            - number of bits in the field(array of fields, depending on Report Count) left to process
+        //         // bits_of_byte         - number of bits in current byte left to process
+        //         // bits_to_copy         - number of bits to copy to result buffer
 
-//                         result.bResult[0] = (result.bResult[0] | (val & mask));
+        //         // for each bit in a field
+        //         for(uint8_t bits_left = rptSize, bits_to_copy = 0; bits_left;
+        //                 bits_left -= bits_to_copy) {
+        //                 bits_to_copy = (bits_left > bits_of_byte) ? bits_of_byte : bits_left;
 
-//                         bits_of_byte -= bits_to_copy;
+        //                 result.dwResult <<= bits_to_copy; // Result buffer is shifted by the number of bits to be copied into it
 
-//                         if(bits_of_byte < 1) {
-//                                 bits_of_byte = 8;
-//                                 p++;
-//                         }
-//                 }
-//                 PrintByteValue(result.dwResult);
-//         }
-//         E_Notify(PSTR("\r\n"), 0x80);
-// }
+        //                 uint8_t val = *p;
 
-// void HIDReportDescParser::StoreRptDescBuf(const uint8_t iface,const uint8_t *pBuf){
+        //                 val >>= (8 - bits_of_byte); // Shift by the number of bits already processed
 
-//         pRptDescBuf[iface][]
-// }
+        //                 mask = 0;
+
+        //                 for(uint8_t j = bits_to_copy; j; j--) {
+        //                         mask <<= 1;
+        //                         mask |= 1;
+        //                 }
+
+        //                 result.bResult[0] = (result.bResult[0] | (val & mask));
+
+        //                 bits_of_byte -= bits_to_copy;
+
+        //                 if(bits_of_byte < 1) {
+        //                         bits_of_byte = 8;
+        //                         p++;
+        //                 }
+        //         }
+        //         PrintByteValue(result.dwResult);
+        // }
+        E_Notify(PSTR("\r\n"), 0x80);
+}
+
+void HIDReportDescParser::OnOutputItem(uint8_t itm) {
+        static uint8_t rptid = 0;
+        uint8_t buf_shift_count = rptSize * rptCount;
+
+        if(rptid != rptId) {
+                oBufLen[rptid - 1] = 1;
+        }
+
+        if(rptId) {     //* When Report ID is >=1, the Report Descriptor has multiple Report.
+                rptid = rptId;
+        } else if(!oBufLen[rptid - 1]){        //* When no report id is not declared, the Report ID is set to 0.
+                rptid = 1;
+                oBufLen[rptid - 1] = 1;
+        } else {
+                rptid = 1;
+        }
+
+        if(useMin && useMax) {
+                if((useMax - useMin) != rptSize) {
+                        buf_shift_count = 0;    //*Skip Buffer transfer
+                        E_Notify(PSTR("\r\nUnmatch (useMax - useMin) and rptSize!!"), 0x80);
+                }
+                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = 0; j < rptSize; j++) {
+                                oBufUsg[rptid -1][i + j] = useMin + j;
+                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+        } else if(useMin) {
+                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = 0; j < rptSize; j++) {
+                                oBufUsg[rptid -1][i + j] = useMin + j;
+                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+        } else if(useMax) {
+                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = rptSize - 1; j; j--) {
+                                oBufUsg[rptid -1][i + j] = useMax - j;
+                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+        } else {
+                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
+                        for(int j = 0; j < rptSize; j++) {
+                                oBufUsg[rptid -1][i + j] = tmpUsgBuf[j];
+                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+                        }
+                }
+                for(int i = 0; i < rptSize; i++){       //*Reset temporary Usage Buffer
+                        tmpUsgBuf[i] = 0;
+                }
+        }
+
+        iBufLen[rptid -1] += buf_shift_count;
+}
 

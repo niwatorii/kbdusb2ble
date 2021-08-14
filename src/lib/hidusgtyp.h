@@ -4,7 +4,7 @@
 #include "Usb.h"
 
 //Reserved
-#define RD      0   //Reserved
+#define RD      1   //Reserved
 
 //Controls
 #define LC      11  //Linear Control

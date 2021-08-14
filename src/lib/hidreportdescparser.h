@@ -20,6 +20,7 @@ struct ConsumerCtrlBitManager{
 class HIDReportDescParser : public USBReadParser {
 public:
         typedef void (*UsagePageFunc)(uint16_t usage);
+        typedef uint8_t (*UsgTypFunc)(uint16_t usage);  //* Func pointer Usage Type Function
 
         static void PrintGenericDesktopPageUsage(uint16_t usage);
         static void PrintSimulationControlsPageUsage(uint16_t usage);
@@ -36,8 +37,10 @@ public:
         static void PrintAlphanumDisplayPageUsage(uint16_t usage);
         static void PrintMedicalInstrumentPageUsage(uint16_t usage);
 
+        static uint8_t getConsumerPageUsageType(uint16_t usage);        //* in usgTypFuncs
+
         static void PrintValue(uint8_t *p, uint8_t len);
-        static void PrintByteValue(uint8_t data);
+        static void PrintByteValue(uint16_t data);
 
         static void PrintItemTitle(uint8_t prefix);
 
@@ -113,6 +116,7 @@ public:
 
 protected:
         static UsagePageFunc usagePageFunctions[];
+        static UsgTypFunc usgTypFuncs[];        //*
 
         MultiValueBuffer theBuffer;
         MultiByteValueParser valParser;
@@ -136,25 +140,43 @@ protected:
         void SetUsagePage(uint16_t page);
 
 
+        uint16_t tmpUsgBuf[512];        //* temporary Usage Buffer
+        uint16_t tmpBitCnt;     //* Bit Count for tmpUsgBuf using in ItemParser
+        uint16_t tmpUsgPg;
+
         uint8_t rptId; //* Report ID
         uint8_t useMin; //* Usage Minimum
         uint8_t useMax; //* Usage Maximum
         uint8_t fieldCount; //* Number of field being currently processed
 
         void OnInputItem(uint8_t itm); //* Method which is called every time Input item is found
+        void OnOutputItem(uint8_t itm); //* Method which is called every time Output item is found
+
 
         uint8_t bNumIface;      //*
         uint16_t maxRptDescLen; //*
-        bool fNewIface = true;
+        bool fNewIface = true;  //*
+
+        UsgTypFunc pfUsgTyp; //*
 
 
         ConsumerCtrlBitManager csmCtrkBitMgr;   //*
+
+        void BufParserConstructor(const uint16_t (&usgary)[512]);
 
 public:
 
         uint8_t **ppRptDescBufs; //2D-array to store the Report Descriptor Buffers
         // uint8_t *rptDescType;  //Array to store the Report Descriptor type
-        uint8_t *pLatestBuf;
+        uint8_t *pLatestBuf;    //*
+
+        uint8_t oBufUsgPage[4][512]; //* 2D-array to store UsgPage of each bit in Output Report Buf (Max. Report Num is 4, for now)
+        uint16_t oBufUsg[4][512]; //* 2D-array to store results of output report bufs parse (Max. Report Num is 4, for now)
+        uint16_t oBufLen[4];    //* lengthes of Buffers  
+        uint8_t iBufUsgPage[4][512]; //* 2D-array to store UsgPage of each bit in Input Report Buf (Max. Report Num is 4, for now)
+        uint16_t iBufUsg[4][512]; //* 2D-array to store results of input report bufs parse (Max. Report Num is 4, for now)
+        uint16_t iBufLen[4];    //* lengthes of Buffers  
+        uint8_t reportNum;      //*Number of Report (based on Max. Report ID)
 
         HIDReportDescParser() :
         itemParseState(0),
@@ -173,6 +195,11 @@ public:
                 theBuffer.pValue = varBuffer;
                 valParser.Initialize(&theBuffer);
                 theSkipper.Initialize(&theBuffer);
+
+                for(int i = 0; i < 4; i++){
+                        oBufLen[i] = 0;
+                        iBufLen[i] = 0;
+                }
         };
         
         HIDReportDescParser(uint8_t numiface, uint16_t maxlen) :
@@ -193,6 +220,7 @@ public:
                 valParser.Initialize(&theBuffer);
                 theSkipper.Initialize(&theBuffer);
 
+                //*
                 if (bNumIface && maxRptDescLen){
                         //Dynamically allocate pRptDescBufs, based on bNumIface and maxRptDescLen 
                         ppRptDescBufs = new uint8_t*[bNumIface];
@@ -202,7 +230,14 @@ public:
                 } else {
                         ppRptDescBufs = 0;
                 }
+
+                for(int i = 0; i < 4; i++){
+                        oBufLen[i] = 0;
+                        iBufLen[i] = 0;
+                }
         };
+
+        void GetRptBufPrs(uint8_t (&usgpage)[3][64], uint16_t (&usg)[3][64], uint8_t (&iochk)[3][64], uint8_t (&reportnum));
 
         void Parse(const uint16_t len, const uint8_t *pbuf, const uint16_t &offset);
 
