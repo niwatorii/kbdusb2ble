@@ -1524,9 +1524,6 @@ void HIDReportDescParser::PrintItemTitle(uint8_t prefix) {
 uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
         //uint8_t ret = enErrorSuccess;
         //reinterpret_cast<>(varBuffer);
-
-        static uint16_t usagepage = 0;   //*to check current usage page
-        static uint8_t usgtyp = 0;      //*
         uint16_t usg;   //*
 
         // static uint16_t tmpBitCnt = 0; //*HID Repor bit count to identfy the bit that Consumer Control items are described;
@@ -1567,13 +1564,14 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                 case 3:
                 {
                         uint16_t data = 0;
+                        uint16_t* u16_data;
 
                         switch(itemSize) {
                                 case 1:
-                                        data = *((uint16_t*)varBuffer);
+                                        data = (uint16_t)(*varBuffer);
                                         break;
                                 case 2: 
-                                        uint16_t* u16_data = reinterpret_cast<uint16_t *>(varBuffer);
+                                        u16_data = reinterpret_cast<uint16_t *>(varBuffer);
                                         data = *u16_data;
                                         break;
                                 default:
@@ -1586,6 +1584,8 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         if(pfUsage) {
                                                 pfUsage(data);
                                                 usg = data;
+                                        } else {
+                                                usg = 0;
                                         }
                                         tmpUsgBuf[tmpBitCnt] = usg;
                                         tmpBitCnt++;
@@ -1642,7 +1642,7 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         SetUsagePage(data);
                                         PrintUsagePage(data);
                                         PrintByteValue(data);
-                                        usagepage = data;
+                                        tmpUsgPg = data;
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_COLLECTION):
                                         rptId = 0;
@@ -1688,6 +1688,17 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         tmpBitCnt = 0;
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_OUTPUT):
+                                        OnOutputItem(data);
+                                        E_Notify(PSTR("("), 0x80);
+                                        PrintBin<uint8_t > (data, 0x80);
+                                        E_Notify(PSTR(")"), 0x80);
+                                        rptId = 0;
+                                        rptSize = 0;
+                                        rptCount = 0;
+                                        useMin = 0;
+                                        useMax = 0;
+                                        tmpBitCnt = 0;
+                                        break;
                                 case (TYPE_MAIN | TAG_MAIN_FEATURE):
                                         E_Notify(PSTR("("), 0x80);
                                         PrintBin<uint8_t > (data, 0x80);
