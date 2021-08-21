@@ -1686,6 +1686,7 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         useMin = 0;
                                         useMax = 0;
                                         tmpBitCnt = 0;
+                                        InitParseMat();
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_OUTPUT):
                                         OnOutputItem(data);
@@ -1709,6 +1710,7 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         useMin = 0;
                                         useMax = 0;
                                         tmpBitCnt = 0;
+                                        InitParseMat();
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_INPUT):
                                         OnInputItem(data);
@@ -2187,3 +2189,8 @@ void HIDReportDescParser::OnOutputItem(uint8_t itm) {
         iBufLen[rptid -1] += buf_shift_count;
 }
 
+void HIDReportDescParser::InitParseMat() {
+        for(int i = 0; i < 512; i++){       //*Reset temporary Usage Buffer
+                tmpUsgBuf[i] = 0;
+        }
+}

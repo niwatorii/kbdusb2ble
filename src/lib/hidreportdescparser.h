@@ -151,6 +151,7 @@ protected:
 
         void OnInputItem(uint8_t itm); //* Method which is called every time Input item is found
         void OnOutputItem(uint8_t itm); //* Method which is called every time Output item is found
+        void InitParseMat();    //* Initialize buffers, variables and array used for Rpt Desc Buf (ex. tmpUsgBuf)
 
 
         uint8_t bNumIface;      //*
