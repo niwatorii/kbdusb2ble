@@ -2018,6 +2018,10 @@ void HIDReportDescParser::OnInputItem(uint8_t itm) {
                 iBufLen[rptid - 1] = 1;
         }
 
+        if(iReportNum < rpdId){
+                iReportNum = rpdId;
+        }
+
         if(rptId) {     //* When Report ID is >=1, the Report Descriptor has multiple Report.
                 rptid = rptId;
         } else if(!iBufLen[rptid - 1]){        //* When no report id is not declared, the Report ID is set to 0.
@@ -2140,6 +2144,10 @@ void HIDReportDescParser::OnOutputItem(uint8_t itm) {
                 oBufLen[rptid - 1] = 1;
         }
 
+        if(oReportNum < rptId){
+                oReportNum = rptId;
+        }
+
         if(rptId) {     //* When Report ID is >=1, the Report Descriptor has multiple Report.
                 rptid = rptId;
         } else if(!oBufLen[rptid - 1]){        //* When no report id is not declared, the Report ID is set to 0.
@@ -2192,5 +2200,41 @@ void HIDReportDescParser::OnOutputItem(uint8_t itm) {
 void HIDReportDescParser::InitParseMat() {
         for(int i = 0; i < 512; i++){       //*Reset temporary Usage Buffer
                 tmpUsgBuf[i] = 0;
+        }
+}
+
+void HIDReportDescParser::OutputRptDescPrs(bool show_input, bool show_output, uint8_t input_rptid, uint8_t output_rptid) {
+        E_Notify(PSTR("\r\nInput:\r\n"),0x80);
+        E_Notify(input_rptid, 0x80);
+        E_Notify(PSTR("]:\r\n"), 0x80);
+        if(show_input){
+                for(int i = 0; i < iBufLen[input_rptid]; i+=8) {
+                        for(int j = 0; j < 8; j++) {
+                                PrintHex<uint8_t> (iBufUsgPage[input_rptid][i], 0x80);
+                                E_Notify(PSTR(" "), 0x80);
+                        }
+                        for(int j = 0; j < 8; j++) {
+                                PrintHex<uint16_t> (iBufUsg[input_rptid][i], 0x80);
+                                E_Notify(PSTR(" "), 0x80);
+                        }
+                        E_Notify(PSTR("\r\n"),0x80);
+                }
+        }
+
+        E_Notify(PSTR("\r\nOutput["),0x80);
+        E_Notify(output_rptid, 0x80);
+        E_Notify(PSTR("]:\r\n"), 0x80);
+        if(show_output){
+                for(int i = 0; i < oBufLen[output_rptid]; i+=8) {
+                        for(int j = 0; j < 8; j++) {
+                                PrintHex<uint8_t> (oBufUsgPage[output_rptid][i], 0x80);
+                                E_Notify(PSTR(" "), 0x80);
+                        }
+                        for(int j = 0; j < 8; j++) {
+                                PrintHex<uint16_t> (oBufUsg[output_rptid][i], 0x80);
+                                E_Notify(PSTR(" "), 0x80);
+                        }
+                        E_Notify(PSTR("\r\n"),0x80);
+                }
         }
 }

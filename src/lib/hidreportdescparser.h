@@ -173,11 +173,14 @@ public:
 
         uint8_t oBufUsgPage[4][512]; //* 2D-array to store UsgPage of each bit in Output Report Buf (Max. Report Num is 4, for now)
         uint16_t oBufUsg[4][512]; //* 2D-array to store results of output report bufs parse (Max. Report Num is 4, for now)
-        uint16_t oBufLen[4];    //* lengthes of Buffers  
+        uint16_t oBufLen[4];    //* lengthes of Buffers
+        uint8_t oReportNum;  
         uint8_t iBufUsgPage[4][512]; //* 2D-array to store UsgPage of each bit in Input Report Buf (Max. Report Num is 4, for now)
         uint16_t iBufUsg[4][512]; //* 2D-array to store results of input report bufs parse (Max. Report Num is 4, for now)
         uint16_t iBufLen[4];    //* lengthes of Buffers  
-        uint8_t reportNum;      //*Number of Report (based on Max. Report ID)
+        uint8_t iReportNum;      //*Number of Report (based on Max. Report ID)
+
+        void OutputRptDescPrs(bool show_input, bool show_output, uint8_t input_rpdid, uint8_t output_rptid);
 
         HIDReportDescParser() :
         itemParseState(0),
