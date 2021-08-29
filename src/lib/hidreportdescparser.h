@@ -219,7 +219,7 @@ public:
         fieldCount(0),
         bNumIface(numiface),
         maxRptDescLen(maxlen)
-        {
+        {                
                 theBuffer.pValue = varBuffer;
                 valParser.Initialize(&theBuffer);
                 theSkipper.Initialize(&theBuffer);

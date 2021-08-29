@@ -1399,6 +1399,8 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
         static uint16_t addcnt = 0;     //*
         static uint8_t ifacecntdn = 0;  //*
 
+        E_Notify(PSTR("Parsing...\r\n"), 0x80);
+
         //*Initialize if parsing new interface HID report descriptor is required
         if (fNewIface) {
                 for (int i = 0; i < 4; i++) {
@@ -2018,8 +2020,8 @@ void HIDReportDescParser::OnInputItem(uint8_t itm) {
                 iBufLen[rptid - 1] = 1;
         }
 
-        if(iReportNum < rpdId){
-                iReportNum = rpdId;
+        if(iReportNum < rptId){
+                iReportNum = rptId;
         }
 
         if(rptId) {     //* When Report ID is >=1, the Report Descriptor has multiple Report.

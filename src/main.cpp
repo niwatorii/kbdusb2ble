@@ -48,13 +48,22 @@ uint8_t HIDSelector::OnInitSuccessful()
   E_Notify(PSTR(" MaxHIDRptDescLen:"),0x80);
   E_Notify((uint8_t)maxHIDRptDescLen, 0x80);
   E_Notify(PSTR("\r\n"),0x80);
-  HIDReportDescParser HidRptDescPsr(bNumIface, maxHIDRptDescLen);
+  delay(1000);
+  HIDReportDescParser HidRptDescPsr; //*
 
   // GetReportDescr(0, &Hex);
 
   for (int i = 0; i < bNumIface; i++){
     GetReportDescr(i, &HidRptDescPsr);
     E_Notify(PSTR("\r\n"), 0x80);
+  }
+
+  for(int i = 0; i < HidRptDescPsr.iReportNum; i++){
+    E_Notify(PSTR("RptID:"), 0x80);
+    E_Notify(HidRptDescPsr.iReportNum, 0x80);
+    E_Notify(PSTR("\r\n"),0x80);
+
+    HidRptDescPsr.OutputRptDescPrs(true, false, i, 0);
   }
   
   return 0;
@@ -166,6 +175,9 @@ void setup()
 
 void loop()
 {
+
+  E_Notify(PSTR("\r\nIn Loop."), 0x80);
+
 
   Usb.Task();
 
