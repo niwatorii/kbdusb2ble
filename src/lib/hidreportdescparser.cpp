@@ -17,6 +17,8 @@ e-mail   :  support@circuitsathome.com
 
 #include "hidreportdescparser.h"
 #include "hidusgtyp.h"
+#include "hidusgpg.h"
+
 
 const char * const HIDReportDescParser::usagePageTitles0[] PROGMEM = {
         pstrUsagePageGenericDesktopControls,
@@ -991,6 +993,91 @@ const char * const HIDReportDescParser::medInstrTitles4[] PROGMEM = {
         pstrUsageSoftControlAdjust
 };
 
+
+
+/*usage Type*/
+const uint8_t HIDReportDescParser::genDesktopTypes0[] PROGMEM = {
+        usgtypUsagePointer,
+        usgtypUsageMouse,
+        usgtypUsageJoystick,
+        usgtypUsageGamePad,
+        usgtypUsageKeyboard,
+        usgtypUsageKeypad,
+        usgtypUsageMultiAxisController,
+        usgtypUsageTabletPCSystemControls
+
+};
+const uint8_t HIDReportDescParser::genDesktopTypes1[] PROGMEM = {
+        usgtypUsageX,
+        usgtypUsageY,
+        usgtypUsageZ,
+        usgtypUsageRx,
+        usgtypUsageRy,
+        usgtypUsageRz,
+        usgtypUsageSlider,
+        usgtypUsageDial,
+        usgtypUsageWheel,
+        usgtypUsageHatSwitch,
+        usgtypUsageCountedBuffer,
+        usgtypUsageByteCount,
+        usgtypUsageMotionWakeup,
+        usgtypUsageStart,
+        usgtypUsageSelect,
+        usgtypUsagePageReserved,
+        usgtypUsageVx,
+        usgtypUsageVy,
+        usgtypUsageVz,
+        usgtypUsageVbrx,
+        usgtypUsageVbry,
+        usgtypUsageVbrz,
+        usgtypUsageVno,
+        usgtypUsageFeatureNotification,
+        usgtypUsageResolutionMultiplier
+};
+const uint8_t HIDReportDescParser::genDesktopTypes2[] PROGMEM = {
+        usgtypUsageSystemControl,
+        usgtypUsageSystemPowerDown,
+        usgtypUsageSystemSleep,
+        usgtypUsageSystemWakeup,
+        usgtypUsageSystemContextMenu,
+        usgtypUsageSystemMainMenu,
+        usgtypUsageSystemAppMenu,
+        usgtypUsageSystemMenuHelp,
+        usgtypUsageSystemMenuExit,
+        usgtypUsageSystemMenuSelect,
+        usgtypUsageSystemMenuRight,
+        usgtypUsageSystemMenuLeft,
+        usgtypUsageSystemMenuUp,
+        usgtypUsageSystemMenuDown,
+        usgtypUsageSystemColdRestart,
+        usgtypUsageSystemWarmRestart,
+        usgtypUsageDPadUp,
+        usgtypUsageDPadDown,
+        usgtypUsageDPadRight,
+        usgtypUsageDPadLeft
+};
+const uint8_t HIDReportDescParser::genDesktopTypes3[] PROGMEM = {
+        usgtypUsageSystemDock,
+        usgtypUsageSystemUndock,
+        usgtypUsageSystemSetup,
+        usgtypUsageSystemBreak,
+        usgtypUsageSystemDebuggerBreak,
+        usgtypUsageApplicationBreak,
+        usgtypUsageApplicationDebuggerBreak,
+        usgtypUsageSystemSpeakerMute,
+        usgtypUsageSystemHibernate
+};
+const uint8_t HIDReportDescParser::genDesktopTypes4[] PROGMEM = {
+        usgtypUsageSystemDisplayInvert,
+        usgtypUsageSystemDisplayInternal,
+        usgtypUsageSystemDisplayExternal,
+        usgtypUsageSystemDisplayBoth,
+        usgtypUsageSystemDisplayDual,
+        usgtypUsageSystemDisplayToggleIntExt,
+        usgtypUsageSystemDisplaySwapPriSec,
+        usgtypUsageSystemDisplayLCDAutoscale
+};
+
 const uint8_t HIDReportDescParser::consTypes0[] PROGMEM = {
         usgtypUsageConsumerControl,
         usgtypUsageNumericKeyPad,
@@ -1401,28 +1488,14 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
 
         E_Notify(PSTR("Parsing...\r\n"), 0x80);
 
-        //*Initialize if parsing new interface HID report descriptor is required
-        if (fNewIface) {
-                for (int i = 0; i < 4; i++) {
-                        oBufLen[i] = 0;
-                        iBufLen[i] = 0;
-                        for (int j = 0; j < 512; j++) {
-                                oBufUsgPage[i][j] = 0;
-                                oBufUsg[i][j] = 0;
-                                iBufUsgPage[i][j] = 0;
-                                iBufUsg[i][j] = 0;
-                        }
-                }
-        }
-
         //*Store the buffers of HID Report Descriptor
-        if (bNumIface > ifacecntdn) {
+        if(fNewIface) {
                 fNewIface = false;
-                for (; strcntdn; strcntdn--, addcnt++, pstrbuf++) {
-                        ppRptDescBufs[ifacecntdn][addcnt] = *pstrbuf;
-                }
-        } else {
-                E_Notify(PSTR("\r\nERROR: too much iface"),0x80);
+                addcnt = 0;
+                desCoLayer = 0;
+        }
+        for (; strcntdn; strcntdn--, addcnt++, pstrbuf++) {
+                pRptDescBufs[addcnt] = *pstrbuf;
         }
 
         while(cntdn) {
@@ -1437,8 +1510,8 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
         if (len < 64){  //*The maximum buffer length that can be retrieved is 64
                 addcnt = 0;
                 totalSize = 0;
-                ifacecntdn++;
                 fNewIface = true;
+                fFinishParse = true;
         }
 
         //USBTRACE2("Total:", totalSize);
@@ -1540,7 +1613,6 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                 itemSize = 1 + ((size == DATA_SIZE_4) ? 4 : size);
 
                                 PrintItemTitle(itemPrefix);
-                                E_Notify(itemSize,0x80);
                         }
                         (*pp)++;
                         (*pcntdn)--;
@@ -1647,12 +1719,15 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         tmpUsgPg = data;
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_COLLECTION):
+                                        OnCollectionItem(data);
+                                        
                                         rptId = 0;
                                         rptSize = 0;
                                         rptCount = 0;
                                         useMin = 0;
                                         useMax = 0;
                                         tmpBitCnt = 0;
+                                        desCoLayer++;
                                         switch(data) {
                                                 case 0x00:
                                                         E_Notify(PSTR(" Physical"), 0x80);
@@ -1688,7 +1763,7 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         useMin = 0;
                                         useMax = 0;
                                         tmpBitCnt = 0;
-                                        InitParseMat();
+                                        desCoLayer--;
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_OUTPUT):
                                         OnOutputItem(data);
@@ -1712,7 +1787,6 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         useMin = 0;
                                         useMax = 0;
                                         tmpBitCnt = 0;
-                                        InitParseMat();
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_INPUT):
                                         OnInputItem(data);
@@ -1758,7 +1832,7 @@ HIDReportDescParser::UsagePageFunc HIDReportDescParser::usagePageFunctions[] /*P
 
 //*
 HIDReportDescParser::UsgTypFunc HIDReportDescParser::usgTypFuncs[] /*PROGMEM*/ = {
-        NULL, //GenericDesktopPageUsage
+        getGenericDesktopPageType, //GenericDesktopPageUsage
         NULL, // SimulationControls
         NULL, // VRControls
         NULL, // SportsControls
@@ -1780,9 +1854,11 @@ HIDReportDescParser::UsgTypFunc HIDReportDescParser::usgTypFuncs[] /*PROGMEM*/ =
 
 void HIDReportDescParser::SetUsagePage(uint16_t page) {
         pfUsage = NULL;
+        pfUsgTyp = NULL;
 
         if(VALUE_BETWEEN(page, 0x00, 0x11)) {
                 pfUsage = (usagePageFunctions[page - 1]);
+                pfUsgTyp = (usgTypFuncs[page - 1]);
 
         } else {
                 switch(page) {
@@ -1974,6 +2050,23 @@ void HIDReportDescParser::PrintMedicalInstrumentPageUsage(uint16_t usage) {
         else E_Notify(pstrUsagePageUndefined, 0x80);
 }
 
+uint8_t HIDReportDescParser::getGenericDesktopPageType(uint16_t usage) {
+        if (VALUE_BETWEEN(usage,0x00,0x0a)) {
+                return consTypes0[usage - (0x00 + 1)];
+        } else if (VALUE_BETWEEN(usage,0x2f,0x49)) {
+                return consTypes1[usage - (0x2f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x7f,0x94)) {
+                return consTypes2[usage - (0x7f + 1)];
+        } else if (VALUE_BETWEEN(usage,0x9f,0xa9)) {
+                return consTypes3[usage - (0x9f + 1)];
+        } else if (VALUE_BETWEEN(usage,0xaf,0xb8)) {
+                return consTypes4[usage - (0xaf + 1)];
+        } else {
+                E_Notify("typ chk: Undef Usage Page",0x80);
+                return 0;
+        }
+}
+
 uint8_t HIDReportDescParser::getConsumerPageUsageType(uint16_t usage) {
         if (VALUE_BETWEEN(usage,0x00,0x07)) {
                 return consTypes0[usage - (0x00 + 1)];
@@ -2012,66 +2105,84 @@ uint8_t HIDReportDescParser::getConsumerPageUsageType(uint16_t usage) {
 }
 
 
+void HIDReportDescParser::OnCollectionItem(uint8_t itm) {
+        uint16_t tmprptyp;
+
+        if(tmpUsgPg < 0x92) {
+                tmprptyp = tmpUsgPg << 8;
+        } else {
+                tmprptyp = 0;
+        }
+
+        if(desCoLayer == 0 || !fChkdRptTyp) {
+                fChkdRptTyp = true;
+                if(pfUsgTyp(tmpUsgBuf[0]) == CA) {
+                        rptTyp = tmprptyp + tmpUsgBuf[0];
+                } else {
+                        rptTyp = 0;
+                }
+        }
+}
+
 void HIDReportDescParser::OnInputItem(uint8_t itm) {
-        static uint8_t rptid = 0;
-        uint8_t buf_shift_count = rptSize * rptCount;
+        // static uint8_t rptid = 0;
+        // uint8_t buf_shift_count = rptSize * rptCount;
 
-        if(rptid != rptId) {
-                iBufLen[rptid - 1] = 1;
-        }
-
-        if(iReportNum < rptId){
-                iReportNum = rptId;
-        }
-
-        if(rptId) {     //* When Report ID is >=1, the Report Descriptor has multiple Report.
-                rptid = rptId;
-        } else if(!iBufLen[rptid - 1]){        //* When no report id is not declared, the Report ID is set to 0.
-                rptid = 1;
-                iBufLen[rptid - 1] = 1;
-        } else {
-                rptid = 1;
-        }
-
-        if(useMin && useMax) {
-                if((useMax - useMin) != rptSize) {
-                        buf_shift_count = 0;    //*Skip Buffer transfer
-                        E_Notify(PSTR("\r\nUnmatch (useMax - useMin) and rptSize!!"), 0x80);
-                }
-                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = 0; j < rptSize; j++) {
-                                iBufUsg[rptid -1][i + j] = useMin + j;
-                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
+        if(tmpUsgPg == CONSUMER_PAGE) {
+                for(int i = 1; i <= (rptSize * rptCount); i++) {
+                        uint16_t count = totalSize + i;
+                        switch(tmpUsgBuf[i]) {
+                                case CC_SCAN_NEXT_TRACK :
+                                        HIDKbdCnsCtrlRptID.ScanNextTrack = rptId;
+                                        HIDKbdCnsCtrl.ScanNextTrack = count;
+                                        break;
+                                case CC_SCAN_PREVIOUS_TRACK :
+                                        HIDKbdCnsCtrlRptID.ScanPreviousTrack = rptId;
+                                        HIDKbdCnsCtrl.ScanPreviousTrack = count;
+                                        break;
+                                case CC_STOP :
+                                        HIDKbdCnsCtrlRptID.Stop = rptId;
+                                        HIDKbdCnsCtrl.Stop = count;
+                                        break;
+                                case CC_PLAY_OR_PAUSE:
+                                        HIDKbdCnsCtrlRptID.PlayOrPause = rptId;
+                                        HIDKbdCnsCtrl.PlayOrPause = count;
+                                        break;
+                                case CC_MUTE :
+                                        HIDKbdCnsCtrlRptID.Mute = rptId;
+                                        HIDKbdCnsCtrl.Mute = count;
+                                        break;
+                                case CC_VOLUME_INCREMENT :
+                                        HIDKbdCnsCtrlRptID.VolumeIncrement = rptId;
+                                        HIDKbdCnsCtrl.VolumeIncrement = count;
+                                        break;
+                                case CC_VOLUME_DECREMENT :
+                                        HIDKbdCnsCtrlRptID.VolumeDecrement = rptId;
+                                        HIDKbdCnsCtrl.VolumeDecrement = count;
+                                        break;
+                                case CC_AL_EMAIL_READER :
+                                        HIDKbdCnsCtrlRptID.ALEMail = rptId;
+                                        HIDKbdCnsCtrl.ALEMail = count;
+                                        break;
+                                case CC_AL_CALCULATOR :
+                                        HIDKbdCnsCtrlRptID.ALCalculator = rptId;
+                                        HIDKbdCnsCtrl.ALCalculator = count;
+                                        break;
+                                case CC_AL_LOCAL_MACHINE_BROWSER :
+                                        HIDKbdCnsCtrlRptID.ALLocalMachineBrowser = rptId;
+                                        HIDKbdCnsCtrl.ALLocalMachineBrowser = count;
+                                        break;
+                                case CC_AL_INTERNET_BROWSER :
+                                        HIDKbdCnsCtrlRptID.ALInternetBrowser = rptId;
+                                        HIDKbdCnsCtrl.ALInternetBrowser = count;
+                                        break;
+                                default :
+                                        break;
                         }
+                        
                 }
-        } else if(useMin) {
-                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = 0; j < rptSize; j++) {
-                                iBufUsg[rptid -1][i + j] = useMin + j;
-                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
-                        }
-                }
-        } else if(useMax) {
-                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = rptSize - 1; j; j--) {
-                                iBufUsg[rptid -1][i + j] = useMax - j;
-                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
-                        }
-                }
-        } else {
-                if(tmpBitCnt)
-                for(int i = iBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = 0; j < rptSize; j++) {
-                                iBufUsg[rptid -1][i + j] = tmpUsgBuf[j];
-                                iBufUsgPage[rptid -1][i + j] = tmpUsgPg;
-                        }
-                }
-                for(int i = 0; i < rptSize; i++){       //*Reset temporary Usage Buffer
-                        tmpUsgBuf[i] = 0;
-                }
-        }
 
-        iBufLen[rptid -1] += buf_shift_count;
+        }
 
         // uint8_t byte_offset = (totalSize >> 3); // calculate offset to the next unhandled byte i = (int)(totalCount / 8);
         // uint32_t tmp = (byte_offset << 3);
@@ -2135,108 +2246,27 @@ void HIDReportDescParser::OnInputItem(uint8_t itm) {
         //         }
         //         PrintByteValue(result.dwResult);
         // }
-        E_Notify(PSTR("\r\n"), 0x80);
+        // E_Notify(PSTR("\r\n"), 0x80);
 }
 
 void HIDReportDescParser::OnOutputItem(uint8_t itm) {
-        static uint8_t rptid = 0;
-        uint8_t buf_shift_count = rptSize * rptCount;
-
-        if(rptid != rptId) {
-                oBufLen[rptid - 1] = 1;
-        }
-
-        if(oReportNum < rptId){
-                oReportNum = rptId;
-        }
-
-        if(rptId) {     //* When Report ID is >=1, the Report Descriptor has multiple Report.
-                rptid = rptId;
-        } else if(!oBufLen[rptid - 1]){        //* When no report id is not declared, the Report ID is set to 0.
-                rptid = 1;
-                oBufLen[rptid - 1] = 1;
-        } else {
-                rptid = 1;
-        }
-
-        if(useMin && useMax) {
-                if((useMax - useMin) != rptSize) {
-                        buf_shift_count = 0;    //*Skip Buffer transfer
-                        E_Notify(PSTR("\r\nUnmatch (useMax - useMin) and rptSize!!"), 0x80);
-                }
-                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = 0; j < rptSize; j++) {
-                                oBufUsg[rptid -1][i + j] = useMin + j;
-                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
-                        }
-                }
-        } else if(useMin) {
-                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = 0; j < rptSize; j++) {
-                                oBufUsg[rptid -1][i + j] = useMin + j;
-                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
-                        }
-                }
-        } else if(useMax) {
-                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = rptSize - 1; j; j--) {
-                                oBufUsg[rptid -1][i + j] = useMax - j;
-                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
-                        }
-                }
-        } else {
-                for(int i = oBufLen[rptid -1] - 1; buf_shift_count; buf_shift_count -= rptSize, i += rptSize) {
-                        for(int j = 0; j < rptSize; j++) {
-                                oBufUsg[rptid -1][i + j] = tmpUsgBuf[j];
-                                oBufUsgPage[rptid -1][i + j] = tmpUsgPg;
-                        }
-                }
-                for(int i = 0; i < rptSize; i++){       //*Reset temporary Usage Buffer
-                        tmpUsgBuf[i] = 0;
-                }
-        }
-
-        iBufLen[rptid -1] += buf_shift_count;
+        
 }
 
-void HIDReportDescParser::InitParseMat() {
-        for(int i = 0; i < 512; i++){       //*Reset temporary Usage Buffer
-                tmpUsgBuf[i] = 0;
-        }
-}
-
-void HIDReportDescParser::OutputRptDescPrs(bool show_input, bool show_output, uint8_t input_rptid, uint8_t output_rptid) {
-        E_Notify(PSTR("\r\nInput:\r\n"),0x80);
-        E_Notify(input_rptid, 0x80);
-        E_Notify(PSTR("]:\r\n"), 0x80);
-        if(show_input){
-                for(int i = 0; i < iBufLen[input_rptid]; i+=8) {
-                        for(int j = 0; j < 8; j++) {
-                                PrintHex<uint8_t> (iBufUsgPage[input_rptid][i], 0x80);
-                                E_Notify(PSTR(" "), 0x80);
-                        }
-                        for(int j = 0; j < 8; j++) {
-                                PrintHex<uint16_t> (iBufUsg[input_rptid][i], 0x80);
-                                E_Notify(PSTR(" "), 0x80);
-                        }
-                        E_Notify(PSTR("\r\n"),0x80);
-                }
-        }
-
-        E_Notify(PSTR("\r\nOutput["),0x80);
-        E_Notify(output_rptid, 0x80);
-        E_Notify(PSTR("]:\r\n"), 0x80);
-        if(show_output){
-                for(int i = 0; i < oBufLen[output_rptid]; i+=8) {
-                        for(int j = 0; j < 8; j++) {
-                                PrintHex<uint8_t> (oBufUsgPage[output_rptid][i], 0x80);
-                                E_Notify(PSTR(" "), 0x80);
-                        }
-                        for(int j = 0; j < 8; j++) {
-                                PrintHex<uint16_t> (oBufUsg[output_rptid][i], 0x80);
-                                E_Notify(PSTR(" "), 0x80);
-                        }
-                        E_Notify(PSTR("\r\n"),0x80);
-                }
+void HIDReportDescParser::ChkRptDesc(uint16_t &rptype) {
+        rptype = rptTyp;
+        switch(rptTyp){
+                case ((GENERIC_DESKTOP_PAGE<<8) + 0x02):        //*Generic Desktop Page, Mouse
+                        E_Notify(PSTR("\r\nRpt Typ: Mouse"), 0x80);
+                        break;
+                case ((GENERIC_DESKTOP_PAGE<<8) + 0x06):        //*Generic Desktop Page, Keyboard
+                        E_Notify(PSTR("\r\nRpt Typ: Keyboard"), 0x80);
+                        break;
+                case ((CONSUMER_PAGE<<8) + 0x01):        //*Consumer Page, Consumer Control
+                        E_Notify(PSTR("\r\nRpt Typ: Consumer Control"), 0x80);
+                        break;
+                default:
+                        E_Notify(PSTR("\r\nRpt Typ: Others"), 0x80);
+                        break;
         }
 }

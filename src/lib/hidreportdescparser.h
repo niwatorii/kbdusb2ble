@@ -6,14 +6,42 @@
 
 #define REPORT_DESC_MEM_NUM 8   //Number of Report Descriptor memory 
 
-struct ConsumerCtrlBitManager{
-        uint16_t plynpus;        //play and pause
-        uint16_t stop;           //stop
-        uint16_t scnptrk;        //scan previous track
-        uint16_t scnntrk;        //scan next track
-        uint16_t mute;           //mute
-        uint16_t voldec;         //Volume Decrement
-        uint16_t volinc;         //Volume Increment
+#define CC_SCAN_NEXT_TRACK              0x00B5
+#define CC_SCAN_PREVIOUS_TRACK          0x00B6
+#define CC_STOP                         0x00B7
+#define CC_PLAY_OR_PAUSE                0x00CD
+#define CC_MUTE                         0x00E2
+#define CC_VOLUME_INCREMENT             0x00E9
+#define CC_VOLUME_DECREMENT             0x00EA
+#define CC_AL_EMAIL_READER              0x018A
+#define CC_AL_CALCULATOR                0x0192
+#define CC_AL_LOCAL_MACHINE_BROWSER     0x0194
+#define CC_AL_INTERNET_BROWSER          0x0196
+struct HIDKeyboardConsumerControl8{
+        uint8_t ScanNextTrack;         //*Transport Control: scan next track
+        uint8_t ScanPreviousTrack;     //*Transport Control: scan previous track
+        uint8_t Stop;                  //*Transport Control: stop    
+        uint8_t PlayOrPause;           //*Transport Control: play and pause    
+        uint8_t Mute;                  //*Audio Control: mute
+        uint8_t VolumeIncrement;       //*Audio Control:Volume Increment
+        uint8_t VolumeDecrement;       //*Audio Control: Volume Decrement
+        uint8_t ALEMail;               //*Application Launch: Email Reader
+        uint8_t ALCalculator;          //*Application Launch: Caliculator
+        uint8_t ALLocalMachineBrowser; //*Application Launch: Local Machine Browser
+        uint8_t ALInternetBrowser;     //*Application Launch: Internet Browser
+};
+struct HIDKeyboardConsumerControl16{
+        uint16_t ScanNextTrack;         //*Transport Control: scan next track
+        uint16_t ScanPreviousTrack;     //*Transport Control: scan previous track
+        uint16_t Stop;                  //*Transport Control: stop    
+        uint16_t PlayOrPause;           //*Transport Control: play and pause    
+        uint16_t Mute;                  //*Audio Control: mute
+        uint16_t VolumeIncrement;       //*Audio Control:Volume Increment
+        uint16_t VolumeDecrement;       //*Audio Control: Volume Decrement
+        uint16_t ALEMail;               //*Application Launch: Email Reader
+        uint16_t ALCalculator;          //*Application Launch: Caliculator
+        uint16_t ALLocalMachineBrowser; //*Application Launch: Local Machine Browser
+        uint16_t ALInternetBrowser;     //*Application Launch: Internet Browser
 };
 
 
@@ -37,6 +65,7 @@ public:
         static void PrintAlphanumDisplayPageUsage(uint16_t usage);
         static void PrintMedicalInstrumentPageUsage(uint16_t usage);
 
+        static uint8_t getGenericDesktopPageType(uint16_t usage);
         static uint8_t getConsumerPageUsageType(uint16_t usage);        //* in usgTypFuncs
 
         static void PrintValue(uint8_t *p, uint8_t len);
@@ -97,6 +126,13 @@ public:
         static const char * const medInstrTitles4[];
 
         
+        /***/
+        static const uint8_t genDesktopTypes0[];       //*
+        static const uint8_t genDesktopTypes1[];       //*
+        static const uint8_t genDesktopTypes2[];       //*
+        static const uint8_t genDesktopTypes3[];       //*
+        static const uint8_t genDesktopTypes4[];       //*
+
         static const uint8_t consTypes0[];      //*
         static const uint8_t consTypes1[];      //*
         static const uint8_t consTypes2[];      //*
@@ -112,7 +148,6 @@ public:
         static const uint8_t consTypesC[];      //*
         static const uint8_t consTypesD[];      //*
         static const uint8_t consTypesE[];      //*
-
 
 protected:
         static UsagePageFunc usagePageFunctions[];
@@ -140,45 +175,42 @@ protected:
         void SetUsagePage(uint16_t page);
 
 
+        uint16_t rptTyp;        //*Report Type. Mouse, Keyboard or ConsumerControl etc..
+
         uint16_t tmpUsgBuf[512];        //* temporary Usage Buffer
         uint16_t tmpBitCnt;     //* Bit Count for tmpUsgBuf using in ItemParser
         uint16_t tmpUsgPg;
+
+        uint8_t desCoLayer;   //*Collection Layer of Report Descriptor 
 
         uint8_t rptId; //* Report ID
         uint8_t useMin; //* Usage Minimum
         uint8_t useMax; //* Usage Maximum
         uint8_t fieldCount; //* Number of field being currently processed
 
+        void OnCollectionItem(uint8_t itm);     //* Method which is called every time Collection item is found
+        void OnEndpointIten(uint8_t itm);     //* Method which is called every time Collection item is found
         void OnInputItem(uint8_t itm); //* Method which is called every time Input item is found
         void OnOutputItem(uint8_t itm); //* Method which is called every time Output item is found
-        void InitParseMat();    //* Initialize buffers, variables and array used for Rpt Desc Buf (ex. tmpUsgBuf)
 
 
-        uint8_t bNumIface;      //*
-        uint16_t maxRptDescLen; //*
+        uint16_t rptDescLen; //*
         bool fNewIface = true;  //*
+        bool fFinishParse = false;      //*
+        bool fChkdRptTyp = false;        //*Need to be Reset in each descriptor parsing
 
         UsgTypFunc pfUsgTyp; //*
-
-
-        ConsumerCtrlBitManager csmCtrkBitMgr;   //*
 
         void BufParserConstructor(const uint16_t (&usgary)[512]);
 
 public:
 
-        uint8_t **ppRptDescBufs; //2D-array to store the Report Descriptor Buffers
+        HIDKeyboardConsumerControl8 HIDKbdCnsCtrlRptID;
+        HIDKeyboardConsumerControl16 HIDKbdCnsCtrl;
+        
+        uint8_t *pRptDescBufs; //Array to store the Report Descriptor Buffers
         // uint8_t *rptDescType;  //Array to store the Report Descriptor type
         uint8_t *pLatestBuf;    //*
-
-        uint8_t oBufUsgPage[4][512]; //* 2D-array to store UsgPage of each bit in Output Report Buf (Max. Report Num is 4, for now)
-        uint16_t oBufUsg[4][512]; //* 2D-array to store results of output report bufs parse (Max. Report Num is 4, for now)
-        uint16_t oBufLen[4];    //* lengthes of Buffers
-        uint8_t oReportNum;  
-        uint8_t iBufUsgPage[4][512]; //* 2D-array to store UsgPage of each bit in Input Report Buf (Max. Report Num is 4, for now)
-        uint16_t iBufUsg[4][512]; //* 2D-array to store results of input report bufs parse (Max. Report Num is 4, for now)
-        uint16_t iBufLen[4];    //* lengthes of Buffers  
-        uint8_t iReportNum;      //*Number of Report (based on Max. Report ID)
 
         void OutputRptDescPrs(bool show_input, bool show_output, uint8_t input_rpdid, uint8_t output_rptid);
 
@@ -192,56 +224,15 @@ public:
         rptId(0),
         useMin(0),
         useMax(0),
-        fieldCount(0),
-        bNumIface(1),
-        maxRptDescLen(0)
+        fieldCount(0)
         {
                 theBuffer.pValue = varBuffer;
                 valParser.Initialize(&theBuffer);
                 theSkipper.Initialize(&theBuffer);
-
-                for(int i = 0; i < 4; i++){
-                        oBufLen[i] = 0;
-                        iBufLen[i] = 0;
-                }
-        };
-        
-        HIDReportDescParser(uint8_t numiface, uint16_t maxlen) :
-        itemParseState(0),
-        itemSize(0),
-        itemPrefix(0),
-        rptSize(0),
-        rptCount(0),
-        pfUsage(NULL),
-        rptId(0),
-        useMin(0),
-        useMax(0),
-        fieldCount(0),
-        bNumIface(numiface),
-        maxRptDescLen(maxlen)
-        {                
-                theBuffer.pValue = varBuffer;
-                valParser.Initialize(&theBuffer);
-                theSkipper.Initialize(&theBuffer);
-
-                //*
-                if (bNumIface && maxRptDescLen){
-                        //Dynamically allocate pRptDescBufs, based on bNumIface and maxRptDescLen 
-                        ppRptDescBufs = new uint8_t*[bNumIface];
-                        for (int i = 0; i < bNumIface; i++){
-                                ppRptDescBufs[i] = new uint8_t[maxRptDescLen];
-                        }
-                } else {
-                        ppRptDescBufs = 0;
-                }
-
-                for(int i = 0; i < 4; i++){
-                        oBufLen[i] = 0;
-                        iBufLen[i] = 0;
-                }
         };
 
-        void GetRptBufPrs(uint8_t (&usgpage)[3][64], uint16_t (&usg)[3][64], uint8_t (&iochk)[3][64], uint8_t (&reportnum));
+        void GetRptBufPrs();
+        void ChkRptDesc(uint16_t &rptype);
 
         void Parse(const uint16_t len, const uint8_t *pbuf, const uint16_t &offset);
 

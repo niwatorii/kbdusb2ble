@@ -52,18 +52,14 @@ uint8_t HIDSelector::OnInitSuccessful()
   HIDReportDescParser HidRptDescPsr; //*
 
   // GetReportDescr(0, &Hex);
+  uint16_t rptype;
 
   for (int i = 0; i < bNumIface; i++){
     GetReportDescr(i, &HidRptDescPsr);
+    HidRptDescPsr.ChkRptDesc(rptype);
+    E_Notify(PSTR("\r\nRecieved RptTyp: "), 0x80);
+    D_PrintHex<uint16_t > (rptype, 0x80);
     E_Notify(PSTR("\r\n"), 0x80);
-  }
-
-  for(int i = 0; i < HidRptDescPsr.iReportNum; i++){
-    E_Notify(PSTR("RptID:"), 0x80);
-    E_Notify(HidRptDescPsr.iReportNum, 0x80);
-    E_Notify(PSTR("\r\n"),0x80);
-
-    HidRptDescPsr.OutputRptDescPrs(true, false, i, 0);
   }
   
   return 0;
@@ -175,10 +171,6 @@ void setup()
 
 void loop()
 {
-
-  E_Notify(PSTR("\r\nIn Loop."), 0x80);
-
-
   Usb.Task();
 
 
