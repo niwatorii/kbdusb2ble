@@ -48,17 +48,17 @@ uint8_t HIDSelector::OnInitSuccessful()
   E_Notify(PSTR(" MaxHIDRptDescLen:"),0x80);
   E_Notify((uint8_t)maxHIDRptDescLen, 0x80);
   E_Notify(PSTR("\r\n"),0x80);
-  delay(1000);
+
   HIDReportDescParser HidRptDescPsr; //*
 
   // GetReportDescr(0, &Hex);
-  uint16_t rptype;
+  ReportTypeFlags rptypeflgs;
 
   for (int i = 0; i < bNumIface; i++){
     GetReportDescr(i, &HidRptDescPsr);
-    HidRptDescPsr.ChkRptDesc(rptype);
+    HidRptDescPsr.ChkRptDesc(rptypeflgs);
     E_Notify(PSTR("\r\nRecieved RptTyp: "), 0x80);
-    D_PrintHex<uint16_t > (rptype, 0x80);
+    D_PrintHex<uint16_t > ((uint16_t)rptypeflgs.byte, 0x80);
     E_Notify(PSTR("\r\n"), 0x80);
   }
   

@@ -1484,15 +1484,14 @@ void HIDReportDescParser::Parse(const uint16_t len, const uint8_t *pbuf, const u
         uint8_t *pstrbuf = (uint8_t*)pbuf;      //*
 
         static uint16_t addcnt = 0;     //*
-        static uint8_t ifacecntdn = 0;  //*
 
-        E_Notify(PSTR("Parsing...\r\n"), 0x80);
 
         //*Store the buffers of HID Report Descriptor
         if(fNewIface) {
                 fNewIface = false;
                 addcnt = 0;
                 desCoLayer = 0;
+                rptTypFlags.byte = 0;
         }
         for (; strcntdn; strcntdn--, addcnt++, pstrbuf++) {
                 pRptDescBufs[addcnt] = *pstrbuf;
@@ -1659,7 +1658,9 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                                 pfUsage(data);
                                                 usg = data;
                                         } else {
-                                                usg = 0;
+                                                E_Notify(PSTR(" "),0x80);
+                                                PrintHex<uint16_t > (data, 0x80);
+                                                usg = data;
                                         }
                                         tmpUsgBuf[tmpBitCnt] = usg;
                                         tmpBitCnt++;
@@ -1720,7 +1721,7 @@ uint8_t HIDReportDescParser::ParseItem(uint8_t **pp, uint16_t *pcntdn) {
                                         break;
                                 case (TYPE_MAIN | TAG_MAIN_COLLECTION):
                                         OnCollectionItem(data);
-                                        
+
                                         rptId = 0;
                                         rptSize = 0;
                                         rptCount = 0;
@@ -2113,14 +2114,35 @@ void HIDReportDescParser::OnCollectionItem(uint8_t itm) {
         } else {
                 tmprptyp = 0;
         }
-
-        if(desCoLayer == 0 || !fChkdRptTyp) {
-                fChkdRptTyp = true;
-                if(pfUsgTyp(tmpUsgBuf[0]) == CA) {
-                        rptTyp = tmprptyp + tmpUsgBuf[0];
+        
+        if(desCoLayer == 0) {
+                if(pfUsgTyp){
+                        if((pfUsgTyp(tmpUsgBuf[0]) == CA) && tmprptyp) {
+                        tmprptyp = tmprptyp + tmpUsgBuf[0];
+                        } else {
+                                tmprptyp = 0;
+                        }
                 } else {
-                        rptTyp = 0;
+                        tmprptyp = 0;
                 }
+        }
+
+        switch(tmprptyp){
+                case ((GENERIC_DESKTOP_PAGE<<8) + 0x02):        //*Generic Desktop Page, Mouse
+                        rptTypFlags.flag_bit.mouse = true;
+                        break;
+                case ((GENERIC_DESKTOP_PAGE<<8) + 0x06):        //*Generic Desktop Page, Keyboard
+                        rptTypFlags.flag_bit.keyboard = true;
+                        break;
+                case ((CONSUMER_PAGE<<8) + 0x01):        //*Consumer Page, Consumer Control
+                        rptTypFlags.flag_bit.consctrl = true;
+                        break;
+                default:
+                        break;
+        }
+
+        for(int i = 0; i < tmpBitCnt; i++) {
+                tmpUsgBuf[i] = 0;
         }
 }
 
@@ -2182,6 +2204,10 @@ void HIDReportDescParser::OnInputItem(uint8_t itm) {
                         
                 }
 
+        }
+
+        for(int i = 0; i < tmpBitCnt; i++) {
+                tmpUsgBuf[i] = 0;
         }
 
         // uint8_t byte_offset = (totalSize >> 3); // calculate offset to the next unhandled byte i = (int)(totalCount / 8);
@@ -2250,23 +2276,26 @@ void HIDReportDescParser::OnInputItem(uint8_t itm) {
 }
 
 void HIDReportDescParser::OnOutputItem(uint8_t itm) {
-        
+        for(int i = 0; i < tmpBitCnt; i++) {
+                tmpUsgBuf[i] = 0;
+        }
 }
 
-void HIDReportDescParser::ChkRptDesc(uint16_t &rptype) {
-        rptype = rptTyp;
-        switch(rptTyp){
-                case ((GENERIC_DESKTOP_PAGE<<8) + 0x02):        //*Generic Desktop Page, Mouse
-                        E_Notify(PSTR("\r\nRpt Typ: Mouse"), 0x80);
-                        break;
-                case ((GENERIC_DESKTOP_PAGE<<8) + 0x06):        //*Generic Desktop Page, Keyboard
-                        E_Notify(PSTR("\r\nRpt Typ: Keyboard"), 0x80);
-                        break;
-                case ((CONSUMER_PAGE<<8) + 0x01):        //*Consumer Page, Consumer Control
-                        E_Notify(PSTR("\r\nRpt Typ: Consumer Control"), 0x80);
-                        break;
-                default:
-                        E_Notify(PSTR("\r\nRpt Typ: Others"), 0x80);
-                        break;
+void HIDReportDescParser::ChkRptDesc(ReportTypeFlags &rptypflags) {
+        E_Notify(PSTR("\r\n"),0x80);
+        if(rptTypFlags.flag_bit.mouse) {
+                E_Notify(PSTR("\r\nRpt Typ: Mouse"), 0x80);
         }
+        if(rptTypFlags.flag_bit.keyboard){
+                E_Notify(PSTR("\r\nRpt Typ: Keyboard"), 0x80);
+        }
+        if(rptTypFlags.flag_bit.consctrl){
+                E_Notify(PSTR("\r\nRpt Typ: Consumer Control"), 0x80);
+        }
+
+        if(!rptTypFlags.byte){
+                E_Notify(PSTR("\r\nOther Uses"), 0x80);
+        }
+
+        rptypflags = rptTypFlags;
 }

@@ -44,6 +44,16 @@ struct HIDKeyboardConsumerControl16{
         uint16_t ALInternetBrowser;     //*Application Launch: Internet Browser
 };
 
+union ReportTypeFlags {
+        uint8_t byte;
+        struct flag_bit_ {
+                bool reserved   : 5;    //*Not Used;
+                bool consctrl   : 1;    //*Flag: Consumer Controls
+                bool keyboard   : 1;    //*Flag: keyboard
+                bool mouse      : 1;    //*Flag: mouse
+        }flag_bit;
+};
+
 
 class HIDReportDescParser : public USBReadParser {
 public:
@@ -175,7 +185,7 @@ protected:
         void SetUsagePage(uint16_t page);
 
 
-        uint16_t rptTyp;        //*Report Type. Mouse, Keyboard or ConsumerControl etc..
+        ReportTypeFlags rptTypFlags;        //*Report Type Flags. Mouse, Keyboard or ConsumerControl
 
         uint16_t tmpUsgBuf[512];        //* temporary Usage Buffer
         uint16_t tmpBitCnt;     //* Bit Count for tmpUsgBuf using in ItemParser
@@ -197,7 +207,6 @@ protected:
         uint16_t rptDescLen; //*
         bool fNewIface = true;  //*
         bool fFinishParse = false;      //*
-        bool fChkdRptTyp = false;        //*Need to be Reset in each descriptor parsing
 
         UsgTypFunc pfUsgTyp; //*
 
@@ -232,7 +241,7 @@ public:
         };
 
         void GetRptBufPrs();
-        void ChkRptDesc(uint16_t &rptype);
+        void ChkRptDesc(ReportTypeFlags &rptypflag);
 
         void Parse(const uint16_t len, const uint8_t *pbuf, const uint16_t &offset);
 
